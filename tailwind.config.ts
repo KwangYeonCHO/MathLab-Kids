@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+import plugin from "tailwindcss/plugin";
 
 const config: Config = {
   content: [
@@ -8,6 +9,9 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      gridTemplateColumns: {
+        '15': 'repeat(15, minmax(0, 1fr))',
+      },
       colors: {
         brand: {
           50: "#f0fdf4",
@@ -29,7 +33,10 @@ const config: Config = {
       },
     },
   },
-  plugins: [],
+  plugins: [plugin(({ addVariant }) => {
+    // 纸张内部使用同一套样式，优先级高于屏幕断点，预览和打印均生效。
+    addVariant('paper', '.a4-sheet &');
+  })],
 };
 
 export default config;

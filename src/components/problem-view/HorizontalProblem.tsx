@@ -58,44 +58,44 @@ export function HorizontalProblem({
   const isDivisionWithRemainder = operation === 'division' && remainder !== undefined;
 
   const fontClass = density === 'ultra-dense'
-    ? 'text-xs print:text-[11px]'
+    ? 'text-xs paper:text-[11px]'
     : density === 'dense'
-    ? 'text-sm sm:text-base print:text-[12.5px]'
+    ? 'text-sm sm:text-base paper:text-[12.5px]'
     : compact || density === 'compact'
-    ? 'text-base sm:text-lg print:text-[14px]'
-    : 'text-lg sm:text-xl print:text-[16px]';
+    ? 'text-base sm:text-lg paper:text-[14px]'
+    : 'text-lg sm:text-xl paper:text-[16px]';
 
   const boxSizeClass = density === 'ultra-dense'
-    ? 'w-9 h-5 print:w-8 print:h-4'
+    ? 'w-9 h-5 paper:w-8 paper:h-4'
     : density === 'dense'
-    ? 'w-10 h-6 print:w-9 print:h-4.5'
+    ? 'w-10 h-6 paper:w-9 paper:h-[18px]'
     : compact || density === 'compact'
-    ? 'w-11 h-7 sm:w-12 sm:h-7.5 print:w-10 print:h-5.5'
-    : 'w-14 h-8 sm:w-16 sm:h-9 print:w-12 print:h-7';
+    ? 'w-11 h-7 sm:w-12 sm:h-[30px] paper:w-10 paper:h-[22px]'
+    : 'w-14 h-8 sm:w-16 sm:h-9 paper:w-12 paper:h-7';
 
   const remainderBoxSizeClass = density === 'ultra-dense'
-    ? 'w-7 h-5 print:w-6.5 print:h-4'
+    ? 'w-7 h-5 paper:w-[26px] paper:h-4'
     : density === 'dense'
-    ? 'w-8 h-6 print:w-7.5 print:h-4.5'
+    ? 'w-8 h-6 paper:w-[30px] paper:h-[18px]'
     : compact || density === 'compact'
-    ? 'w-9 h-7 sm:w-10 sm:h-7.5 print:w-8.5 print:h-5.5'
-    : 'w-11 h-8 sm:w-12 sm:h-9 print:w-10 print:h-7';
+    ? 'w-9 h-7 sm:w-10 sm:h-[30px] paper:w-[34px] paper:h-[22px]'
+    : 'w-11 h-8 sm:w-12 sm:h-9 paper:w-10 paper:h-7';
 
   const containerClass = fullWidth
     ? `w-full flex items-center justify-between flex-nowrap whitespace-nowrap font-bold text-slate-800 math-font ${fontClass}`
-    : `inline-flex items-center flex-nowrap whitespace-nowrap gap-1.5 sm:gap-2 print:gap-1 font-bold text-slate-800 math-font ${fontClass}`;
+    : `inline-flex items-center flex-nowrap whitespace-nowrap gap-1.5 sm:gap-2 paper:gap-1 font-bold text-slate-800 math-font ${fontClass}`;
 
   return (
     <div className={containerClass}>
       {/* 1. 왼쪽: 수식 본체 (피연산자A + 연산기호 + 피연산자B) */}
-      <div className="flex items-center gap-1 sm:gap-1.5 print:gap-0.5 flex-shrink-0">
+      <div className="flex items-center gap-1 sm:gap-1.5 paper:gap-0.5 flex-shrink-0">
         <span className="tabular-nums">{operandA}</span>
         <span className="text-emerald-600 font-extrabold px-0.5">{opSymbol}</span>
         <span className="tabular-nums">{operandB}</span>
       </div>
 
       {/* 2. 오른쪽: 등호(=) + 답안 박스 (오른쪽 끝으로 완벽 정렬) */}
-      <div className="flex items-center gap-1 sm:gap-1.5 print:gap-1 flex-shrink-0 ml-auto">
+      <div className="flex items-center gap-1 sm:gap-1.5 paper:gap-1 flex-shrink-0 ml-auto">
         <span className="text-slate-500 font-semibold px-0.5">=</span>
 
       {shouldShowAnswer ? (
@@ -128,13 +128,13 @@ export function HorizontalProblem({
         /* 인쇄 및 학습지용 빈 답안 박스 (절대 줄바꿈 안 됨) */
         <div className="inline-flex items-center flex-nowrap gap-1 flex-shrink-0">
           <div
-            className={`${boxSizeClass} border-2 border-slate-300 print:border-slate-400 rounded-md bg-slate-50/50 print:bg-white flex-shrink-0`}
+            className={`${boxSizeClass} border-2 border-slate-300 paper:border-slate-400 rounded-md bg-slate-50/50 paper:bg-white flex-shrink-0`}
           />
           {isDivisionWithRemainder && (
             <>
               <span className="text-slate-400 font-bold text-xs">…</span>
               <div
-                className={`${remainderBoxSizeClass} border-2 border-slate-300 print:border-slate-400 rounded-md bg-slate-50/50 print:bg-white flex-shrink-0`}
+                className={`${remainderBoxSizeClass} border-2 border-slate-300 paper:border-slate-400 rounded-md bg-slate-50/50 paper:bg-white flex-shrink-0`}
               />
             </>
           )}

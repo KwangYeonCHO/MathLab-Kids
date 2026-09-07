@@ -22,7 +22,19 @@ interface WorksheetState {
   lastResult: SessionResult | null;
   soundEnabled: boolean;
 
+  // 인쇄 설정 (Print Settings)
+  printColumns: 'auto' | 2 | 3 | 4 | 5 | 6;
+  printIncludeAnswerKey: boolean;
+  printIsCompact: boolean;
+  printSheetCount: number;
+  printFontScale: number; // 수식 글자 크기 비율 (0.7 ~ 1.5, 기본 1.0)
+
   // 액션
+  setPrintColumns: (columns: 'auto' | 2 | 3 | 4 | 5 | 6) => void;
+  setPrintIncludeAnswerKey: (include: boolean) => void;
+  setPrintIsCompact: (compact: boolean) => void;
+  setPrintSheetCount: (count: number) => void;
+  setPrintFontScale: (scale: number) => void;
   setRule: (ruleOrUpdater: Partial<WorksheetRule> | ((prev: WorksheetRule) => WorksheetRule)) => void;
   resetRuleToDefault: () => void;
   loadPreset: (presetId: string) => void;
@@ -63,6 +75,17 @@ export const useWorksheetStore = create<WorksheetState>()(
   problemStartTime: Date.now(),
   lastResult: null,
   soundEnabled: true,
+  printColumns: 'auto',
+  printIncludeAnswerKey: false,
+  printIsCompact: true,
+  printSheetCount: 1,
+  printFontScale: 1.0,
+
+  setPrintColumns: (columns) => set({ printColumns: columns }),
+  setPrintIncludeAnswerKey: (include) => set({ printIncludeAnswerKey: include }),
+  setPrintIsCompact: (compact) => set({ printIsCompact: compact }),
+  setPrintSheetCount: (count) => set({ printSheetCount: Math.max(1, Math.min(20, count)) }),
+  setPrintFontScale: (scale) => set({ printFontScale: Math.round(Math.max(0.7, Math.min(1.5, scale)) * 100) / 100 }),
 
   setRule: (ruleOrUpdater) => {
     set((state) => {
@@ -372,6 +395,11 @@ export const useWorksheetStore = create<WorksheetState>()(
         isImmediateGrading: state.isImmediateGrading,
         practiceViewMode: state.practiceViewMode,
         lastResult: state.lastResult,
+        printColumns: state.printColumns,
+        printIncludeAnswerKey: state.printIncludeAnswerKey,
+        printIsCompact: state.printIsCompact,
+        printSheetCount: state.printSheetCount,
+        printFontScale: state.printFontScale,
       }),
     }
   )

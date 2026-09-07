@@ -2,43 +2,124 @@
 
 import React, { useState, useEffect } from 'react';
 import { useWorksheetStore } from '@/stores/worksheetStore';
+import { generateWorksheet } from '@/domain/math/generators/engine';
+import { Problem } from '@/domain/math/types';
 import { PrintWorksheet, getAutoColumns, calculatePrintDensity } from '@/components/print/PrintWorksheet';
 import { PrintAnswerKey } from '@/components/print/PrintAnswerKey';
-import { Printer, RefreshCw, ArrowLeft, CheckSquare, Square, Sparkles } from 'lucide-react';
+import { A4Sheet } from '@/components/print/A4Sheet';
+import { Printer, RefreshCw, ArrowLeft, CheckSquare, Square, Sparkles, Files, Type, Minus, Plus } from 'lucide-react';
 import Link from 'next/link';
 
 export default function PrintPage() {
-  const { currentRule, setRule, problems, generateNewProblems } = useWorksheetStore();
-  const [columns, setColumns] = useState<'auto' | 2 | 3 | 4 | 5 | 6>('auto');
-  const [includeAnswerKey, setIncludeAnswerKey] = useState(false); // 默认不包含答案纸，练习纸更纯粹
-  const [isCompact, setIsCompact] = useState(true); // 默认开启紧凑模式，确保 1 张 A4 纸打印
+  const {
+    currentRule,
+    setRule,
+    problems,
+    generateNewProblems,
+    printColumns = 'auto',
+    setPrintColumns,
+    printIncludeAnswerKey = false,
+    setPrintIncludeAnswerKey,
+    printIsCompact = true,
+    setPrintIsCompact,
+    printSheetCount = 1,
+    setPrintSheetCount,
+    printFontScale = 1.0,
+    setPrintFontScale,
+  } = useWorksheetStore();
 
+  const [sheets, setSheets] = useState<Problem[][]>([]);
+
+  const sheetCount = Math.max(1, Math.min(20, printSheetCount || 1));
+  const columns = printColumns ?? 'auto';
+  const includeAnswerKey = printIncludeAnswerKey ?? false;
+  const isCompact = printIsCompact ?? true;
+  const fontScale = printFontScale ?? 1.0;
+
+  // 确保第一份题目生成，若为空则由 store 生成
   useEffect(() => {
     if (problems.length === 0) {
       generateNewProblems();
     }
   }, [problems.length, generateNewProblems]);
 
+  // 根据当前规则与 sheetCount 准备各张纸的独立随机题目集
+  useEffect(() => {
+    setSheets((prev) => {
+      const firstSet =
+        problems.length === currentRule.count
+          ? problems
+          : prev[0]?.length === currentRule.count
+          ? prev[0]
+          : null;
+
+      const newSheets: Problem[][] = [];
+      if (firstSet) {
+        newSheets.push(firstSet);
+      } else {
+        const res = generateWorksheet(currentRule);
+        if (res.success && res.problems.length > 0) {
+          newSheets.push(res.problems);
+        }
+      }
+
+      // 不足 sheetCount 时，补充独立随机生成的题目集
+      for (let i = newSheets.length; i < sheetCount; i++) {
+        const res = generateWorksheet(currentRule);
+        if (res.success && res.problems.length > 0) {
+          newSheets.push(res.problems);
+        }
+      }
+
+      return newSheets.slice(0, sheetCount);
+    });
+  }, [currentRule, sheetCount, problems]);
+
   const handlePrint = () => {
     window.print();
   };
 
+  const handleRefreshAll = () => {
+    generateNewProblems();
+    const newSheets: Problem[][] = [];
+    for (let i = 0; i < sheetCount; i++) {
+      const res = generateWorksheet(currentRule);
+      if (res.success && res.problems.length > 0) {
+        newSheets.push(res.problems);
+      }
+    }
+    setSheets(newSheets);
+  };
+
   const handleCountChange = (newCount: number) => {
     if (isNaN(newCount) || newCount < 5 || newCount > 100) return;
+    const nextRule = { ...currentRule, count: newCount };
     setRule({ count: newCount });
-    generateNewProblems();
+    const newSheets: Problem[][] = [];
+    for (let i = 0; i < sheetCount; i++) {
+      const res = generateWorksheet(nextRule);
+      if (res.success && res.problems.length > 0) {
+        newSheets.push(res.problems);
+      }
+    }
+    setSheets(newSheets);
+  };
+
+  const handleSheetCountChange = (newCount: number) => {
+    const valid = Math.max(1, Math.min(20, isNaN(newCount) ? 1 : newCount));
+    setPrintSheetCount(valid);
   };
 
   const effectiveColumns =
     columns === 'auto'
-      ? getAutoColumns(problems.length, currentRule.displayFormat)
+      ? getAutoColumns(currentRule.count, currentRule.displayFormat)
       : columns;
 
   const density = isCompact
-    ? calculatePrintDensity(problems.length, effectiveColumns)
+    ? calculatePrintDensity(currentRule.count, effectiveColumns)
     : 'normal';
 
-  const rowCount = Math.ceil(problems.length / effectiveColumns);
+  const rowCount = Math.ceil(currentRule.count / effectiveColumns);
 
   const densityLabel = {
     'normal': '여유 공간',
@@ -48,7 +129,7 @@ export default function PrintPage() {
   }[density];
 
   return (
-    <div className="space-y-6 pb-20">
+    <div className="print-page space-y-6 pb-20">
       {/* 인쇄 컨트롤 툴바 (인쇄 시 숨김: no-print) */}
       <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3.5 no-print">
         {/* 상단 1열: 제목 & 액션 버튼 */}
@@ -68,9 +149,15 @@ export default function PrintPage() {
                   <Sparkles className="w-3 h-3" />
                   A4 1장 쏙 맞춤 ({densityLabel})
                 </span>
+                {sheetCount > 1 && (
+                  <span className="text-[11px] font-bold text-indigo-700 bg-indigo-50 px-2.5 py-0.5 rounded-full border border-indigo-200 flex items-center gap-1">
+                    <Files className="w-3 h-3" />
+                    총 {sheetCount}장 연속 인쇄
+                  </span>
+                )}
               </div>
               <p className="text-xs text-slate-500 mt-0.5">
-                총 <span className="font-bold text-emerald-600">{problems.length}문제</span> 감지됨 · <span className="font-bold text-slate-800">{effectiveColumns}열 {rowCount}행</span> 배치로 단 한 장의 A4 용지에 알뜰하게 인쇄됩니다.
+                장당 <span className="font-bold text-emerald-600">{currentRule.count}문제</span> · <span className="font-bold text-slate-800">{effectiveColumns}열 {rowCount}행</span> 배치 · <span className="font-bold text-slate-700">총 {sheetCount}장</span> (총 <span className="font-bold text-emerald-700">{sheetCount * currentRule.count}문제</span> 각기 다른 랜덤 문제)
               </p>
             </div>
           </div>
@@ -78,8 +165,8 @@ export default function PrintPage() {
           <div className="flex items-center gap-2">
             {/* 새 문제 갱신 */}
             <button
-              onClick={() => generateNewProblems()}
-              title="동일 조건 새 문제 생성"
+              onClick={handleRefreshAll}
+              title="모든 학습지의 문제를 새롭게 랜덤 생성"
               className="p-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-colors flex items-center gap-1.5 text-xs font-bold"
             >
               <RefreshCw className="w-4 h-4" />
@@ -92,12 +179,12 @@ export default function PrintPage() {
               className="px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-black text-white text-sm font-extrabold flex items-center gap-2 shadow-md active:scale-98 transition-all"
             >
               <Printer className="w-4 h-4 text-emerald-400" />
-              인쇄하기 (PDF 저장)
+              <span>인쇄하기 ({sheetCount}장 PDF 저장)</span>
             </button>
           </div>
         </div>
 
-        {/* 하단 2열: 사용자 맞춤 제어 (문제 수 커스텀, 열 수 커스텀, 압축 옵션) */}
+        {/* 하단 2열: 사용자 맞춤 제어 (문제 수, 인쇄 매수, 열 수, 압축 옵션) */}
         <div className="flex flex-wrap items-center justify-between gap-3 text-xs">
           <div className="flex flex-wrap items-center gap-3">
             {/* 1. 문제 수 사용자 커스텀 */}
@@ -135,11 +222,46 @@ export default function PrintPage() {
               </div>
             </div>
 
-            {/* 2. 배열 열 수 사용자 커스텀 */}
+            {/* 2. 인쇄 매수 (여러 장 서로 다른 문제 세트 인쇄) */}
+            <div className="flex items-center bg-slate-50 p-1 rounded-xl border border-slate-200">
+              <span className="px-2 font-bold text-slate-500">인쇄 매수:</span>
+              <div className="flex items-center gap-0.5">
+                {[1, 2, 3, 5, 10].map((num) => (
+                  <button
+                    key={num}
+                    onClick={() => handleSheetCountChange(num)}
+                    className={`px-2 py-1 rounded-lg font-bold transition-all ${
+                      sheetCount === num
+                        ? 'bg-white text-emerald-700 shadow-xs border border-emerald-200 font-extrabold'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    {num}장
+                  </button>
+                ))}
+              </div>
+              <div className="flex items-center gap-1 pl-2 ml-1 border-l border-slate-200 pr-1">
+                <input
+                  type="number"
+                  min={1}
+                  max={20}
+                  value={sheetCount}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value, 10);
+                    if (!isNaN(val)) handleSheetCountChange(val);
+                  }}
+                  className="w-10 px-1 py-0.5 text-center text-xs font-black text-slate-800 bg-white border border-slate-300 rounded focus:border-emerald-500 outline-none"
+                  title="인쇄할 서로 다른 학습지 매수 (1~20장)"
+                />
+                <span className="text-[11px] font-semibold text-slate-400">장</span>
+              </div>
+            </div>
+
+            {/* 3. 배열 열 수 사용자 커스텀 */}
             <div className="flex items-center bg-slate-50 p-1 rounded-xl border border-slate-200">
               <span className="px-2 font-bold text-slate-500">배열:</span>
               <button
-                onClick={() => setColumns('auto')}
+                onClick={() => setPrintColumns('auto')}
                 className={`px-2 py-1 rounded-lg font-bold transition-all ${
                   columns === 'auto' ? 'bg-white text-emerald-700 shadow-xs border border-emerald-200 font-extrabold' : 'text-slate-600 hover:text-slate-900'
                 }`}
@@ -150,7 +272,7 @@ export default function PrintPage() {
               {([2, 3, 4, 5, 6] as const).map((col) => (
                 <button
                   key={col}
-                  onClick={() => setColumns(col)}
+                  onClick={() => setPrintColumns(col)}
                   className={`px-2 py-1 rounded-lg font-bold transition-all ${
                     columns === col ? 'bg-white text-slate-900 shadow-xs border border-slate-300 font-black' : 'text-slate-600 hover:text-slate-900'
                   }`}
@@ -160,13 +282,63 @@ export default function PrintPage() {
                 </button>
               ))}
             </div>
+
+            {/* 4. 수식 글자 크기 조절 (행/열 栅格 유지, 내용물만 확대/축소) */}
+            <div className="flex items-center bg-slate-50 p-1 rounded-xl border border-slate-200">
+              <span className="px-2 font-bold text-slate-500 flex items-center gap-1">
+                <Type className="w-3.5 h-3.5 text-slate-400" />
+                <span>수식 크기:</span>
+              </span>
+              <button
+                onClick={() => setPrintFontScale(Math.max(0.7, Math.round((fontScale - 0.05) * 100) / 100))}
+                disabled={fontScale <= 0.7}
+                className="w-6 h-6 flex items-center justify-center rounded-lg font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-200 disabled:opacity-40 disabled:hover:bg-transparent transition-all"
+                title="수식 글자 축소 (5% 단위)"
+              >
+                <Minus className="w-3.5 h-3.5" />
+              </button>
+              <div
+                className="px-1.5 py-0.5 text-center text-xs font-black min-w-[46px] text-emerald-700 bg-white border border-emerald-200 rounded-md shadow-xs"
+                title="현재 수식 크기 비율"
+              >
+                {Math.round(fontScale * 100)}%
+              </div>
+              <button
+                onClick={() => setPrintFontScale(Math.min(1.5, Math.round((fontScale + 0.05) * 100) / 100))}
+                disabled={fontScale >= 1.5}
+                className="w-6 h-6 flex items-center justify-center rounded-lg font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-200 disabled:opacity-40 disabled:hover:bg-transparent transition-all"
+                title="수식 글자 확대 (5% 단위)"
+              >
+                <Plus className="w-3.5 h-3.5" />
+              </button>
+              <div className="flex items-center gap-0.5 pl-1.5 ml-1 border-l border-slate-200">
+                {[
+                  { label: '작게', scale: 0.85 },
+                  { label: '기본', scale: 1.0 },
+                  { label: '크게', scale: 1.15 },
+                  { label: '특대', scale: 1.3 },
+                ].map((item) => (
+                  <button
+                    key={item.scale}
+                    onClick={() => setPrintFontScale(item.scale)}
+                    className={`px-1.5 py-1 rounded-md text-[11px] font-bold transition-all ${
+                      Math.abs(fontScale - item.scale) < 0.01
+                        ? 'bg-white text-emerald-700 shadow-xs border border-emerald-200 font-black'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
 
-          {/* 3. 인쇄 부가 기능 토글 */}
+          {/* 5. 인쇄 부가 기능 토글 */}
           <div className="flex items-center gap-2">
             {/* 컴팩트 1장 인쇄 토글 */}
             <button
-              onClick={() => setIsCompact(!isCompact)}
+              onClick={() => setPrintIsCompact(!isCompact)}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold border transition-colors ${
                 isCompact
                   ? 'bg-emerald-50 border-emerald-300 text-emerald-700'
@@ -179,7 +351,7 @@ export default function PrintPage() {
 
             {/* 정답지 포함 토글 */}
             <button
-              onClick={() => setIncludeAnswerKey(!includeAnswerKey)}
+              onClick={() => setPrintIncludeAnswerKey(!includeAnswerKey)}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold border transition-colors ${
                 includeAnswerKey
                   ? 'bg-emerald-50 border-emerald-300 text-emerald-700'
@@ -187,29 +359,54 @@ export default function PrintPage() {
               }`}
             >
               {includeAnswerKey ? <CheckSquare className="w-3.5 h-3.5" /> : <Square className="w-3.5 h-3.5" />}
-              정답지 포함 (2페이지)
+              정답 포함 (여백에 자동 배치)
             </button>
           </div>
         </div>
       </div>
 
-      {/* A4 종이 프리뷰 컨테이너 */}
-      <div className="flex justify-center bg-slate-200/60 p-2 sm:p-6 rounded-3xl print:p-0 print:bg-transparent">
-        <div className="w-full max-w-[210mm] bg-white shadow-xl rounded-sm print:shadow-none print:rounded-none min-h-[297mm] print:min-h-0 p-4 sm:p-8 print:p-0 print:m-0 print:w-full print:max-w-none">
-          <PrintWorksheet
-            rule={currentRule}
-            problems={problems}
-            columns={columns}
-            compact={isCompact}
-          />
+      {/* A4 종이 프리뷰 컨테이너 (단일 또는 다중 매수 연속 렌더링) */}
+      <div className="a4-preview bg-slate-200/60 p-2 sm:p-6 rounded-3xl space-y-6">
+        {(sheets.length > 0 ? sheets : [problems]).map((sheetProblems, idx) => (
+          <div key={idx} className="sheet-wrapper relative">
+            {sheetCount > 1 && (
+              <div className="no-print flex items-center justify-between px-3 py-1.5 mb-2.5 bg-slate-100/90 border border-slate-300 rounded-xl text-xs font-bold text-slate-700 shadow-xs">
+                <span className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                  제 {idx + 1}번째 학습지 (세트 {idx + 1} / {sheetCount})
+                </span>
+                <span className="text-[11px] text-slate-500 font-semibold">
+                  랜덤 {sheetProblems.length}문제 세트
+                </span>
+              </div>
+            )}
 
-          {includeAnswerKey && (
-            <PrintAnswerKey
-              rule={currentRule}
-              problems={problems}
-            />
-          )}
-        </div>
+            <A4Sheet
+              fit={isCompact}
+              answerKey={
+                includeAnswerKey ? (
+                  <PrintAnswerKey
+                    rule={currentRule}
+                    problems={sheetProblems}
+                    sheetIndex={idx + 1}
+                    totalSheets={sheetCount}
+                    showCutLine={true}
+                  />
+                ) : undefined
+              }
+            >
+              <PrintWorksheet
+                rule={currentRule}
+                problems={sheetProblems}
+                columns={columns}
+                compact={isCompact}
+                sheetIndex={idx + 1}
+                totalSheets={sheetCount}
+                fontScale={fontScale}
+              />
+            </A4Sheet>
+          </div>
+        ))}
       </div>
     </div>
   );
