@@ -96,8 +96,8 @@ export function HorizontalProblem({
         <span className="tabular-nums">{operandB}</span>
       </div>
 
-      {/* 2. 오른쪽: 등호(=) + 답안 박스 (오른쪽 끝으로 완벽 정렬) */}
-      <div className="flex items-center gap-1 sm:gap-1.5 paper:gap-1 flex-shrink-0 ml-auto">
+      {/* 2. 오른쪽: 등호(=) + 답안 박스 */}
+      <div className={`flex items-center gap-1 sm:gap-1.5 paper:gap-1 flex-shrink-0 ${fullWidth ? 'ml-auto' : ''}`}>
         <span className="text-slate-500 font-semibold px-0.5">=</span>
 
       {shouldShowAnswer ? (

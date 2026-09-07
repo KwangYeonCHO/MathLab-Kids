@@ -165,7 +165,7 @@ export function PrintWorksheet({
 
             <div className="w-full flex justify-center items-center py-0.5 overflow-visible">
               <div
-                className={`${problem.displayFormat === 'vertical' ? 'inline-flex' : 'w-full'} items-center justify-center transition-transform`}
+                className="inline-flex items-center justify-center transition-transform"
                 style={
                   fontScale && fontScale !== 1
                     ? {
@@ -193,7 +193,6 @@ export function PrintWorksheet({
                     isReadOnly={true}
                     showExampleAnswer={problem.isExample && rule.showFirstExample}
                     compact={compact}
-                    fullWidth={true}
                     density={density}
                   />
                 )}
