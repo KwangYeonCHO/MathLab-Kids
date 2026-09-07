@@ -155,7 +155,7 @@ export default function HomePage() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
-          {GRADE_PRESETS.slice(0, 4).map((preset) => (
+          {GRADE_PRESETS.map((preset) => (
             <div
               key={preset.id}
               className="p-4 bg-slate-50 rounded-xl border border-slate-200 hover:border-emerald-400 hover:bg-emerald-50/30 transition-all flex flex-col justify-between"
