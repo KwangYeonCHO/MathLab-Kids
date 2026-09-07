@@ -14,6 +14,7 @@ interface VerticalProblemProps {
   showExampleAnswer?: boolean;
   compact?: boolean;
   density?: 'normal' | 'compact' | 'dense' | 'ultra-dense';
+  virtualKeyboard?: boolean;
 }
 
 function normalizeNumeric(val: string): string {
@@ -34,6 +35,7 @@ export function VerticalProblem({
   showExampleAnswer = false,
   compact = false,
   density,
+  virtualKeyboard = false,
 }: VerticalProblemProps) {
   const { operandA, operandB, operation, answer, isExample } = problem;
 
@@ -141,7 +143,7 @@ export function VerticalProblem({
           ) : (
             <input
               type="text"
-              inputMode="numeric"
+              inputMode={virtualKeyboard ? 'none' : 'numeric'}
               value={userAnswer !== null && userAnswer !== undefined ? userAnswer : ''}
               onFocus={onFocus}
               onKeyDown={(e) => {

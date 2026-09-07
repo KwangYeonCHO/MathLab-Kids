@@ -21,18 +21,18 @@ export function Navbar() {
 
   return (
     <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-200 no-print">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-13 sm:h-16">
           {/* 로고 */}
-          <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-white shadow-sm shadow-emerald-200 group-hover:scale-105 transition-transform">
-              <span className="font-black text-xl tracking-tighter">M+</span>
+          <Link href="/" className="flex items-center gap-2 group">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-white shadow-xs sm:shadow-sm shadow-emerald-200 group-hover:scale-105 transition-transform flex-shrink-0">
+              <span className="font-black text-base sm:text-xl tracking-tighter">M+</span>
             </div>
             <div>
-              <span className="font-extrabold text-xl text-slate-800 tracking-tight block">
+              <span className="font-extrabold text-base sm:text-xl text-slate-800 tracking-tight block leading-tight">
                 MathLab <span className="text-emerald-600">Kids</span>
               </span>
-              <span className="text-[10px] text-slate-500 block -mt-1 font-medium">초등 수학 연산 연구소</span>
+              <span className="text-[10px] sm:text-[12px] text-slate-500 block leading-tight font-medium">조가영을 위한 초등 수학 연산 훈련소</span>
             </div>
           </Link>
 

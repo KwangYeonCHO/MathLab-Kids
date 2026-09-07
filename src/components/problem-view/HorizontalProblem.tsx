@@ -18,6 +18,7 @@ interface HorizontalProblemProps {
   compact?: boolean;
   fullWidth?: boolean; // 新增：撑满整列宽度并右对齐答题框
   density?: 'normal' | 'compact' | 'dense' | 'ultra-dense';
+  virtualKeyboard?: boolean;
 }
 
 function normalizeNumeric(val: string): string {
@@ -43,6 +44,7 @@ export function HorizontalProblem({
   compact = false,
   fullWidth = false,
   density,
+  virtualKeyboard = false,
 }: HorizontalProblemProps) {
   const { operandA, operandB, operation, answer, remainder, isExample } = problem;
 
@@ -144,7 +146,7 @@ export function HorizontalProblem({
           {/* 몫 또는 정답 입력 */}
           <input
             type="text"
-            inputMode="numeric"
+            inputMode={virtualKeyboard ? 'none' : 'numeric'}
             value={userAnswer !== null && userAnswer !== undefined ? userAnswer : ''}
             onFocus={onFocusAnswer}
             onKeyDown={(e) => {
@@ -171,7 +173,7 @@ export function HorizontalProblem({
               <span className="text-slate-400 font-bold text-sm">…</span>
               <input
                 type="text"
-                inputMode="numeric"
+                inputMode={virtualKeyboard ? 'none' : 'numeric'}
                 value={userRemainder !== null && userRemainder !== undefined ? userRemainder : ''}
                 onFocus={onFocusRemainder}
                 onKeyDown={(e) => {

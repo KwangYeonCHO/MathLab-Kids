@@ -247,37 +247,37 @@ export default function PracticePage() {
     liveEvaluated > 0 ? Math.round((liveCorrectCount / liveEvaluated) * 100) : 0;
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6 pb-12">
+    <div className="max-w-4xl mx-auto space-y-2 sm:space-y-6 pb-2 sm:pb-12">
       {/* 상단 컨트롤 바 */}
-      <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-4">
-        <div className="flex items-center flex-wrap gap-3">
-          <div className="flex items-center gap-1.5 text-xs font-bold text-slate-500 bg-slate-100 px-3 py-1.5 rounded-lg">
-            <Clock className="w-4 h-4 text-emerald-600" />
+      <div className="bg-white p-2.5 sm:p-5 rounded-xl sm:rounded-2xl border border-slate-200 shadow-xs sm:shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4">
+        <div className="flex items-center justify-between sm:justify-start flex-wrap gap-2 sm:gap-3">
+          <div className="flex items-center gap-1 sm:gap-1.5 text-[11px] sm:text-xs font-bold text-slate-500 bg-slate-100 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg">
+            <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600" />
             <span>{formatTimer(elapsedSeconds)}</span>
           </div>
 
-          <div className="text-xs font-bold text-slate-600 flex items-center gap-2">
+          <div className="text-[11px] sm:text-xs font-bold text-slate-600 flex items-center gap-1.5 sm:gap-2">
             <span>
               푼 문제: <span className="text-emerald-600 font-black">{answeredCount}</span> / {problems.length}
             </span>
 
             {/* 즉시 채점 켜짐 상태일 때 실시간 채점 현황 표시 (총 100점 만점 기준 맞힌 문제에 따라 실시간 득점) */}
             {isImmediateGrading && (
-              <span className="inline-flex items-center gap-2 pl-2 border-l border-slate-200 animate-in fade-in duration-150">
+              <span className="inline-flex items-center gap-1.5 sm:gap-2 pl-1.5 sm:pl-2 border-l border-slate-200 animate-in fade-in duration-150">
                 <span className="inline-flex items-center gap-0.5 text-emerald-600 font-extrabold" title="정답 수">
-                  <CheckCircle2 className="w-3.5 h-3.5" /> {liveCorrectCount}
+                  <CheckCircle2 className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> {liveCorrectCount}
                 </span>
                 <span className="inline-flex items-center gap-0.5 text-rose-500 font-extrabold" title="오답 수">
-                  <XCircle className="w-3.5 h-3.5" /> {liveIncorrectCount}
+                  <XCircle className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> {liveIncorrectCount}
                 </span>
                 <span
-                  className="px-2 py-0.5 bg-emerald-50 text-emerald-700 font-black text-[11px] rounded border border-emerald-200"
+                  className="px-1.5 py-0.5 bg-emerald-50 text-emerald-700 font-black text-[10.5px] sm:text-[11px] rounded border border-emerald-200"
                   title="총 문항 수(100점 만점) 기준 현재 획득 점수"
                 >
                   현재 {currentEarnedScore}점
                 </span>
                 {liveIncorrectCount > 0 && (
-                  <span className="text-[10.5px] text-slate-400 font-semibold" title="푼 문제 중 정답률">
+                  <span className="text-[10px] sm:text-[10.5px] text-slate-400 font-semibold" title="푼 문제 중 정답률">
                     ({accuracyRate}%)
                   </span>
                 )}
@@ -286,29 +286,29 @@ export default function PracticePage() {
           </div>
         </div>
 
-        {/* 뷰 모드 토글 (한 문제씩 / 한꺼번에) */}
-        <div className="flex items-center gap-2">
-          <div className="bg-slate-100 p-1 rounded-xl flex items-center">
+        {/* 뷰 모드 토글 (한 문제씩 / 한꺼번에) & 즉시 채점 토글 */}
+        <div className="flex items-center justify-between sm:justify-end gap-1.5 sm:gap-2">
+          <div className="bg-slate-100 p-0.5 sm:p-1 rounded-lg sm:rounded-xl flex items-center">
             <button
               onClick={() => setPracticeViewMode('single')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+              className={`flex items-center gap-1 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-md sm:rounded-lg text-[11px] sm:text-xs font-bold transition-all ${
                 practiceViewMode === 'single'
-                  ? 'bg-white text-slate-900 shadow-sm'
+                  ? 'bg-white text-slate-900 shadow-xs sm:shadow-sm'
                   : 'text-slate-500 hover:text-slate-800'
               }`}
             >
-              <Square className="w-3.5 h-3.5" />
+              <Square className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
               한 문제씩
             </button>
             <button
               onClick={() => setPracticeViewMode('grid')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+              className={`flex items-center gap-1 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-md sm:rounded-lg text-[11px] sm:text-xs font-bold transition-all ${
                 practiceViewMode === 'grid'
-                  ? 'bg-white text-slate-900 shadow-sm'
+                  ? 'bg-white text-slate-900 shadow-xs sm:shadow-sm'
                   : 'text-slate-500 hover:text-slate-800'
               }`}
             >
-              <LayoutGrid className="w-3.5 h-3.5" />
+              <LayoutGrid className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
               한꺼번에
             </button>
           </div>
@@ -316,7 +316,7 @@ export default function PracticePage() {
           {/* 즉시 채점 토글 */}
           <button
             onClick={() => setIsImmediateGrading(!isImmediateGrading)}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-colors ${
+            className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold border transition-colors ${
               isImmediateGrading
                 ? 'bg-emerald-50 border-emerald-300 text-emerald-700'
                 : 'bg-white border-slate-200 text-slate-500'
@@ -329,9 +329,9 @@ export default function PracticePage() {
 
       {/* 1. 한 문제씩 풀기 모드 (Single Mode) */}
       {practiceViewMode === 'single' ? (
-        <div className="space-y-6">
+        <div className="space-y-2 sm:space-y-5">
           {/* 진행 바 */}
-          <div className="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden">
+          <div className="w-full bg-slate-200 h-1.5 sm:h-2 rounded-full overflow-hidden">
             <div
               className="bg-emerald-500 h-full transition-all duration-300 rounded-full"
               style={{ width: `${((currentIndex + 1) / problems.length) * 100}%` }}
@@ -339,31 +339,31 @@ export default function PracticePage() {
           </div>
 
           {/* 메인 문제 카드 */}
-          <div className="bg-white p-6 sm:p-10 rounded-3xl border border-slate-200 shadow-sm text-center relative overflow-hidden">
+          <div className="bg-white px-3 py-2.5 sm:p-8 rounded-2xl sm:rounded-3xl border border-slate-200 shadow-xs sm:shadow-sm text-center relative overflow-hidden">
             {/* 정답/오답 즉시 피드백 오버레이 */}
             {feedback === 'correct' && (
               <div className="absolute inset-0 bg-emerald-500/15 backdrop-blur-xs flex items-center justify-center z-10 animate-in zoom-in-95 duration-150">
-                <div className="bg-white px-6 py-3 rounded-2xl shadow-xl border-2 border-emerald-500 flex items-center gap-2.5 text-emerald-700 font-black text-xl">
-                  <CheckCircle2 className="w-8 h-8 text-emerald-600" />
+                <div className="bg-white px-4 sm:px-6 py-2 sm:py-3 rounded-xl sm:rounded-2xl shadow-xl border-2 border-emerald-500 flex items-center gap-2 text-emerald-700 font-black text-lg sm:text-xl">
+                  <CheckCircle2 className="w-6 h-6 sm:w-8 sm:h-8 text-emerald-600" />
                   정답입니다! 🎉
                 </div>
               </div>
             )}
             {feedback === 'incorrect' && (
               <div className="absolute inset-0 bg-rose-500/15 backdrop-blur-xs flex items-center justify-center z-10 animate-in zoom-in-95 duration-150">
-                <div className="bg-white px-6 py-3 rounded-2xl shadow-xl border-2 border-rose-500 flex items-center gap-2.5 text-rose-700 font-black text-xl">
-                  <XCircle className="w-8 h-8 text-rose-600" />
+                <div className="bg-white px-4 sm:px-6 py-2 sm:py-3 rounded-xl sm:rounded-2xl shadow-xl border-2 border-rose-500 flex items-center gap-2 text-rose-700 font-black text-lg sm:text-xl">
+                  <XCircle className="w-6 h-6 sm:w-8 sm:h-8 text-rose-600" />
                   다시 계산해 보세요!
                 </div>
               </div>
             )}
 
             {/* 문제 번호 & 지시문 */}
-            <div className="flex items-center justify-between pb-4 mb-6 border-b border-slate-100">
-              <span className="px-3 py-1 bg-emerald-50 text-emerald-800 rounded-full text-xs font-black">
+            <div className="flex items-center justify-between pb-1.5 sm:pb-3 mb-1.5 sm:mb-4 border-b border-slate-100">
+              <span className="px-2.5 py-0.5 bg-emerald-50 text-emerald-800 rounded-full text-[11px] sm:text-xs font-black">
                 문제 {currentIndex + 1} / {problems.length}
               </span>
-              <span className="text-xs font-bold text-slate-400">
+              <span className="text-[11px] sm:text-xs font-bold text-slate-400">
                 {currentProblem.operation === 'division' && currentProblem.remainder !== undefined
                   ? '몫과 나머지를 구해 보세요.'
                   : '계산해 보세요.'}
@@ -371,22 +371,23 @@ export default function PracticePage() {
             </div>
 
             {/* 수식 렌더링 */}
-            <div className="py-6 sm:py-8 flex justify-center items-center">
+            <div className="py-1 sm:py-6 flex justify-center items-center">
               {currentProblem.displayFormat === 'vertical' ? (
-                <div className="scale-125 sm:scale-150 transform transition-transform my-4">
+                <div className="scale-105 sm:scale-135 transform transition-transform my-0.5 sm:my-2">
                   <VerticalProblem
                     key={currentProblem.id}
                     problem={currentProblem}
                     userAnswer={currentAnswer?.answer}
                     onFocus={() => setActiveInputType('answer')}
                     onSubmit={handleSubmit}
+                    virtualKeyboard={true}
                     onAnswerChange={(val) =>
                       setUserAnswer(currentProblem.id, val, undefined)
                     }
                   />
                 </div>
               ) : (
-                <div className="scale-110 sm:scale-125 transform transition-transform my-4">
+                <div className="scale-105 sm:scale-125 transform transition-transform my-0.5 sm:my-2">
                   <HorizontalProblem
                     key={currentProblem.id}
                     problem={currentProblem}
@@ -395,6 +396,7 @@ export default function PracticePage() {
                     onFocusAnswer={() => setActiveInputType('answer')}
                     onFocusRemainder={() => setActiveInputType('remainder')}
                     onSubmit={handleSubmit}
+                    virtualKeyboard={true}
                     onAnswerChange={(val) =>
                       setUserAnswer(currentProblem.id, val, undefined)
                     }
@@ -408,12 +410,12 @@ export default function PracticePage() {
 
             {/* 나눗셈의 경우 몫/나머지 입력 탭 선택 버튼 */}
             {currentProblem.operation === 'division' && currentProblem.remainder !== undefined && (
-              <div className="flex justify-center gap-2 mt-4">
+              <div className="flex justify-center gap-2 mt-1 sm:mt-3">
                 <button
                   onClick={() => setActiveInputType('answer')}
-                  className={`px-4 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
                     activeInputType === 'answer'
-                      ? 'bg-emerald-600 text-white shadow-sm'
+                      ? 'bg-emerald-600 text-white shadow-xs'
                       : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                   }`}
                 >
@@ -421,9 +423,9 @@ export default function PracticePage() {
                 </button>
                 <button
                   onClick={() => setActiveInputType('remainder')}
-                  className={`px-4 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
                     activeInputType === 'remainder'
-                      ? 'bg-amber-500 text-white shadow-sm'
+                      ? 'bg-amber-500 text-white shadow-xs'
                       : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                   }`}
                 >
@@ -434,46 +436,26 @@ export default function PracticePage() {
           </div>
 
           {/* 문제 이동 버튼 및 가상 키패드 */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
-            {/* 이전 / 다음 이동 내비게이터 */}
-            <div className="flex flex-col gap-3 order-2 md:order-1">
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={prevProblem}
-                  disabled={currentIndex === 0}
-                  className="py-3.5 px-4 rounded-xl border border-slate-300 hover:bg-slate-100 disabled:opacity-40 disabled:hover:bg-transparent text-sm font-bold text-slate-700 flex items-center justify-center gap-1.5 transition-colors"
-                >
-                  <ArrowLeft className="w-4 h-4" />
-                  이전
-                </button>
-
-                {/* 즉시 정답 확인 버튼 */}
-                <button
-                  type="button"
-                  onClick={handleSubmit}
-                  className="flex-1 py-3.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white text-sm font-extrabold flex items-center justify-center gap-2 shadow-sm transition-all active:scale-98"
-                >
-                  <Check className="w-4 h-4 stroke-[3]" />
-                  정답 확인 (Enter)
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleNextProblem}
-                  disabled={currentIndex === problems.length - 1}
-                  className="py-3.5 px-4 rounded-xl border border-slate-300 hover:bg-slate-100 disabled:opacity-40 disabled:hover:bg-transparent text-sm font-bold text-slate-700 flex items-center justify-center gap-1.5 transition-colors"
-                >
-                  다음
-                  <ArrowRight className="w-4 h-4" />
-                </button>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6 items-center">
+            {/* 데스크톱 전용 안내 패널 (모바일에서는 숨김) */}
+            <div className="hidden md:flex flex-col justify-between h-full bg-slate-50 p-6 rounded-2xl border border-slate-200">
+              <div>
+                <h3 className="font-extrabold text-slate-800 text-lg mb-2">💡 스마트 연산 팁</h3>
+                <p className="text-sm text-slate-600 leading-relaxed">
+                  키보드의 <strong>숫자 키(0~9)</strong>와 <strong>Enter 키</strong>로 화면 키패드를 터치하지 않고도 빠르게 입력할 수 있습니다.
+                </p>
+                <div className="mt-4 pt-4 border-t border-slate-200 text-xs text-slate-500 space-y-1">
+                  <div>• 이전/다음 이동: 키패드 하단 [이전], [다음] 버튼</div>
+                  <div>• 한 글자 지우기: Backspace 키 또는 키패드 ⌫</div>
+                  <div>• {isImmediateGrading ? '현재 즉시 채점 모드 동작 중' : '즉시 채점 꺼짐 (최종 제출 시 일괄 채점)'}</div>
+                </div>
               </div>
 
-              {/* 완료 및 채점하기 버튼 */}
+              {/* 완료 및 채점하기 버튼 (데스크톱) */}
               <button
                 type="button"
                 onClick={handleFinishAll}
-                className="w-full py-4 rounded-xl bg-slate-900 hover:bg-slate-800 active:bg-black text-white text-base font-extrabold flex items-center justify-center gap-2 shadow-md transition-all active:scale-98"
+                className="w-full py-3.5 rounded-xl bg-slate-900 hover:bg-slate-800 active:bg-black text-white text-base font-extrabold flex items-center justify-center gap-2 shadow-md transition-all active:scale-98 mt-6"
               >
                 <Check className="w-5 h-5 stroke-[3] text-emerald-400" />
                 {isLastProblem ? '모두 풀었습니다 (최종 제출)' : '중간 채점 및 제출'}
@@ -481,14 +463,28 @@ export default function PracticePage() {
             </div>
 
             {/* 어린이 터치 친화형 숫자 키패드 */}
-            <div className="order-1 md:order-2">
+            <div className="w-full flex flex-col items-center">
               <ChildKeypad
                 onDigit={handleKeypadDigit}
                 onBackspace={handleKeypadBackspace}
                 onClear={handleKeypadClear}
                 onSubmit={handleSubmit}
+                onPrev={prevProblem}
+                onNext={handleNextProblem}
+                canPrev={currentIndex > 0}
+                canNext={currentIndex < problems.length - 1}
                 allowNegative={currentRule.allowNegative}
               />
+
+              {/* 모바일 전용 완료 버튼 (키패드 바로 아래 배치) */}
+              <button
+                type="button"
+                onClick={handleFinishAll}
+                className="md:hidden w-full max-w-sm mt-2 h-10 rounded-xl bg-slate-900 hover:bg-slate-800 active:bg-black text-white text-xs font-extrabold flex items-center justify-center gap-1.5 shadow-2xs transition-all active:scale-98"
+              >
+                <Check className="w-4 h-4 stroke-[3] text-emerald-400" />
+                {isLastProblem ? '모두 풀었습니다 (최종 제출)' : '중간 채점 및 제출'}
+              </button>
             </div>
           </div>
         </div>

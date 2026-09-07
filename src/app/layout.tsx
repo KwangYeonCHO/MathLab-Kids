@@ -46,10 +46,10 @@ export default function RootLayout({
       </head>
       <body className="min-h-screen flex flex-col bg-slate-50 text-slate-900">
         <Navbar />
-        <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <main className="flex-1 w-full max-w-7xl mx-auto px-2.5 sm:px-6 lg:px-8 py-2 sm:py-6">
           {children}
         </main>
-        <footer className="border-t border-slate-200 bg-white py-6 text-center text-xs text-slate-500 no-print">
+        <footer className="border-t border-slate-200 bg-white py-3 sm:py-6 text-center text-xs text-slate-500 no-print">
           <div className="max-w-7xl mx-auto px-4">
             <p className="font-medium text-slate-600">
               MathLab Kids · 대한민국 2022 개정 초등 교육과정 기준 연산 서비스
