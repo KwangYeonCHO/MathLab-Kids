@@ -1,6 +1,7 @@
 // @ts-nocheck
 import type { NextConfig } from "next";
 import fs from "fs";
+import path from "path";
 
 // 修复 Windows RaiDrive / 虚拟网络驱动器上 fs.readlink 返回 EISDIR 替代 EINVAL 导致 Webpack 崩溃的问题
 function patchFsReadlink() {
@@ -88,11 +89,25 @@ class FixRaiDrivePlugin {
   }
 }
 
+// 自动动态获取当前项目所在根目录的名称（例如 'math'、'Math' 或任意自定义目录名）
+const currentDirName = path.basename(process.cwd());
+
+// 优先使用 BASE_PATH 环境变量；若未提供，则全自动匹配当前根目录名称
+const basePath =
+  process.env.BASE_PATH !== undefined
+    ? process.env.BASE_PATH
+    : (currentDirName && currentDirName !== '.' ? `/${currentDirName}` : '');
+
+console.log(`[Next.js Build] Auto-detected basePath: "${basePath}"`);
+
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   output: 'export',
-  basePath: '/Math',
+  basePath,
   trailingSlash: true,
+  env: {
+    NEXT_PUBLIC_BASE_PATH: basePath,
+  },
   webpack: (config) => {
     config.resolve.symlinks = false;
     config.cache = false;
