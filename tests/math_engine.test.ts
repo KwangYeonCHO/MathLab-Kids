@@ -8,6 +8,7 @@ import { generateDivisionProblem } from '../src/domain/math/generators/division'
 import { generateWorksheet } from '../src/domain/math/generators/engine';
 import { GRADE_PRESETS } from '../src/domain/math/presets';
 import { WorksheetRule } from '../src/domain/math/types';
+import { matchesPreset } from '../src/domain/math/ruleTitle';
 
 describe('받아올림(Carry) 정밀 계산기 테스트', () => {
   it('받아올림이 없는 덧셈은 0을 반환해야 함', () => {
@@ -201,5 +202,55 @@ describe('10,000회 대량 무결성 스트레스 테스트 (매뉴얼 26.2)', (
     }
 
     expect(violationCount).toBe(0);
+  });
+
+  describe('학년별 프리셋(GRADE_PRESETS) 전체 유효성 검증', () => {
+    it('총 25개의 공식 프리셋이 모두 20문항을 오류 없이 정상 생성해야 함', () => {
+      expect(GRADE_PRESETS.length).toBe(25);
+
+      GRADE_PRESETS.forEach((preset) => {
+        const result = generateWorksheet(preset.rule);
+        expect(result.success).toBe(true);
+        expect(result.problems.length).toBe(preset.rule.count);
+      });
+    });
+
+    it('신규 초1 프리셋(g1-add-sub-no-carry-vertical)은 받아올림과 받아내림이 없어야 함', () => {
+      const preset = GRADE_PRESETS.find((p) => p.id === 'g1-add-sub-no-carry-vertical');
+      expect(preset).toBeDefined();
+      expect(preset?.rule.displayFormat).toBe('vertical');
+      expect(preset?.rule.operations).toEqual(['addition', 'subtraction']);
+
+      const res = generateWorksheet(preset!.rule);
+      expect(res.success).toBe(true);
+      expect(res.problems.length).toBe(20);
+
+      res.problems.forEach((prob) => {
+        if (prob.operation === 'addition') {
+          expect(countCarries(prob.operandA, prob.operandB)).toBe(0);
+        } else if (prob.operation === 'subtraction') {
+          expect(analyzeBorrows(prob.operandA, prob.operandB).count).toBe(0);
+        }
+      });
+    });
+
+    it('각 프리셋은 오직 자기 자신에게만 매칭되어야 하며 다중 선택(충돌)이 발생하지 않아야 함', () => {
+      const collisions: string[] = [];
+      for (let i = 0; i < GRADE_PRESETS.length; i++) {
+        for (let j = 0; j < GRADE_PRESETS.length; j++) {
+          if (i !== j) {
+            const p1 = GRADE_PRESETS[i];
+            const p2 = GRADE_PRESETS[j];
+            if (matchesPreset(p1.rule, p2.rule)) {
+              collisions.push(`[${p1.id}: ${p1.title}] collided with [${p2.id}: ${p2.title}]`);
+            }
+          }
+        }
+      }
+      if (collisions.length > 0) {
+        console.error('PRESET COLLISIONS DETECTED:', collisions);
+      }
+      expect(collisions).toEqual([]);
+    });
   });
 });

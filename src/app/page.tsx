@@ -45,13 +45,13 @@ export default function HomePage() {
   const [selectedGrade, setSelectedGrade] = useState<string>('all');
 
   const gradeTabs = [
-    { id: 'all', label: '전체 (24)' },
+    { id: 'all', label: `전체 (${GRADE_PRESETS.length})` },
     { id: '초1', label: '1학년' },
     { id: '초2', label: '2학년' },
     { id: '초3', label: '3학년' },
     { id: '초4', label: '4학년' },
-    { id: '초5', label: '5학년 (8)' },
-    { id: '초6', label: '6학년 (8)' },
+    { id: '초5', label: '5학년' },
+    { id: '초6', label: '6학년' },
   ];
 
   const filteredPresets =

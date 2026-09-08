@@ -8,11 +8,12 @@ import { FractionValue, isEquivalent, isSimplestForm } from '../domain/math/core
 import { areDecimalsEqual } from '../domain/math/core/decimal';
 import { GRADE_PRESETS } from '../domain/math/presets';
 import { generateWorksheet } from '../domain/math/generators/engine';
-import { resolveRuleTitle } from '../domain/math/ruleTitle';
+import { resolveRuleTitle, findMatchingPreset } from '../domain/math/ruleTitle';
 import { saveSessionResult, saveInProgressSession } from '../db/historyDb';
 
 interface WorksheetState {
   currentRule: WorksheetRule;
+  currentPresetId: string | null;
   problems: Problem[];
   generationError: string | null;
   currentIndex: number;
@@ -100,55 +101,58 @@ export function evaluateProblemAnswer(prob: Problem, userAns?: UserAnswer): bool
   return ok;
 }
 
-const defaultRule = GRADE_PRESETS[1].rule; // 2학년 받아올림 덧셈 기본
+const defaultPreset = GRADE_PRESETS.find((p) => p.id === 'g2-add-carry-once') || GRADE_PRESETS[0];
+const defaultRule = defaultPreset.rule;
 
 export const useWorksheetStore = create<WorksheetState>()(
   persist(
     (set, get) => ({
       currentRule: defaultRule,
-  problems: [],
-  generationError: null,
-  currentIndex: 0,
-  userAnswers: {},
-  isImmediateGrading: true,
-  practiceViewMode: 'single',
-  startTime: null,
-  problemStartTime: Date.now(),
-  lastResult: null,
-  soundEnabled: true,
-  printColumns: 'auto',
-  printIncludeAnswerKey: true,
-  printIsCompact: false,
-  printSheetCount: 1,
-  printFontScale: 1.0,
+      currentPresetId: defaultPreset.id,
+      problems: [],
+      generationError: null,
+      currentIndex: 0,
+      userAnswers: {},
+      isImmediateGrading: true,
+      practiceViewMode: 'single',
+      startTime: null,
+      problemStartTime: Date.now(),
+      lastResult: null,
+      soundEnabled: true,
+      printColumns: 'auto',
+      printIncludeAnswerKey: true,
+      printIsCompact: false,
+      printSheetCount: 1,
+      printFontScale: 1.0,
 
-  setPrintColumns: (columns) => set({ printColumns: columns }),
-  setPrintIncludeAnswerKey: (include) => set({ printIncludeAnswerKey: include }),
-  setPrintIsCompact: (compact) => set({ printIsCompact: compact }),
-  setPrintSheetCount: (count) => set({ printSheetCount: count }),
-  setPrintFontScale: (scale) => set({ printFontScale: Math.max(0.7, Math.min(1.5, scale)) }),
+      setPrintColumns: (columns) => set({ printColumns: columns }),
+      setPrintIncludeAnswerKey: (include) => set({ printIncludeAnswerKey: include }),
+      setPrintIsCompact: (compact) => set({ printIsCompact: compact }),
+      setPrintSheetCount: (count) => set({ printSheetCount: count }),
+      setPrintFontScale: (scale) => set({ printFontScale: Math.max(0.7, Math.min(1.5, scale)) }),
 
-  setRule: (ruleOrUpdater) => {
-    const nextRule =
-      typeof ruleOrUpdater === 'function'
-        ? ruleOrUpdater(get().currentRule)
-        : { ...get().currentRule, ...ruleOrUpdater };
-    set({ currentRule: nextRule });
-    get().generateNewProblems();
-  },
+      setRule: (ruleOrUpdater) => {
+        const nextRule =
+          typeof ruleOrUpdater === 'function'
+            ? ruleOrUpdater(get().currentRule)
+            : { ...get().currentRule, ...ruleOrUpdater };
+        const matched = findMatchingPreset(nextRule);
+        set({ currentRule: nextRule, currentPresetId: matched ? matched.id : null });
+        get().generateNewProblems();
+      },
 
-  resetRuleToDefault: () => {
-    set({ currentRule: defaultRule });
-    get().generateNewProblems();
-  },
+      resetRuleToDefault: () => {
+        set({ currentRule: defaultRule, currentPresetId: defaultPreset.id });
+        get().generateNewProblems();
+      },
 
-  loadPreset: (presetId) => {
-    const preset = GRADE_PRESETS.find((p) => p.id === presetId);
-    if (preset) {
-      set({ currentRule: { ...preset.rule } });
-      get().generateNewProblems();
-    }
-  },
+      loadPreset: (presetId) => {
+        const preset = GRADE_PRESETS.find((p) => p.id === presetId);
+        if (preset) {
+          set({ currentRule: { ...preset.rule }, currentPresetId: preset.id });
+          get().generateNewProblems();
+        }
+      },
 
   generateNewProblems: () => {
     const { currentRule } = get();
@@ -408,6 +412,7 @@ export const useWorksheetStore = create<WorksheetState>()(
       }),
       partialize: (state) => ({
         currentRule: state.currentRule,
+        currentPresetId: state.currentPresetId,
         soundEnabled: state.soundEnabled,
         isImmediateGrading: state.isImmediateGrading,
         practiceViewMode: state.practiceViewMode,

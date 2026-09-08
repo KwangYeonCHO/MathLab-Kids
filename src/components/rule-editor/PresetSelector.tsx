@@ -7,11 +7,11 @@ import { useWorksheetStore } from '@/stores/worksheetStore';
 import { Sparkles } from 'lucide-react';
 
 export function PresetSelector() {
-  const { currentRule, loadPreset } = useWorksheetStore();
+  const { currentRule, currentPresetId, loadPreset } = useWorksheetStore();
   const [selectedGrade, setSelectedGrade] = useState<string>('all');
 
   const gradeTabs = [
-    { id: 'all', label: '전체 (24)' },
+    { id: 'all', label: `전체 (${GRADE_PRESETS.length})` },
     { id: '초1', label: '1학년' },
     { id: '초2', label: '2학년' },
     { id: '초3', label: '3학년' },
@@ -55,7 +55,9 @@ export function PresetSelector() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
         {filteredPresets.map((preset) => {
-          const isSelected = matchesPreset(currentRule, preset.rule);
+          const isSelected = currentPresetId
+            ? currentPresetId === preset.id
+            : matchesPreset(currentRule, preset.rule);
           return (
             <button
               key={preset.id}
