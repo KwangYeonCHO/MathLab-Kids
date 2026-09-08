@@ -15,7 +15,7 @@ interface PrintAnswerKeyProps {
   showCutLine?: boolean;
 }
 
-/** 将规则标题和题目答案渲染为紧凑答案区，保证纵向严整对齐。 */
+/** 규칙 제목과 문제 정답을 밀집된 정답표 영역으로 렌더링하며 세로 정렬을 완벽히 유지합니다. */
 export function PrintAnswerKey({
   rule,
   problems,
@@ -73,7 +73,7 @@ export function PrintAnswerKey({
         title="프린터 헤드 노즐 막힘 방지 3mm 레인보우 컬러 밴드"
       />
 
-      {/* 答案网格：每行固定答案，列与列纵向严格对齐 */}
+      {/* 정답 그리드: 각 행별 고정 정답 배치 및 열 간 엄격한 세로 정렬 유지 */}
       <div
         className={`grid grid-cols-${effectiveColumns} gap-x-1 gap-y-1 w-full`}
         style={{

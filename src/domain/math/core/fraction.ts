@@ -38,7 +38,7 @@ export function lcm(a: number, b: number): number {
 
 /**
  * 대분수 또는 일반 분수를 순수 가분수(Improper fraction) 형태로 정규화합니다.
- * 예: 2又 3/4 -> 11/4
+ * 예: 2와 3/4 -> 11/4
  */
 export function toImproper(f: FractionValue): { numerator: number; denominator: number } {
   if (f.denominator <= 0) {

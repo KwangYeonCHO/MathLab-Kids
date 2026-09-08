@@ -3,9 +3,9 @@
 import React, { useLayoutEffect, useRef, useState } from 'react';
 
 /**
- * 共用的 A4 纸张：children 为纸张内容，fit 开启时按实际尺寸缩放至一页。
- * answerKey 在自然排版有剩余空间时合并，否则另起一页。
- * 返回带统一页边距的纸张；字体加载及打印前重新测量，不裁切题目。
+ * 공통 A4 용지 컴포넌트: children은 문제지 본문이며, fit 활성화 시 1페이지 규격에 맞게 자동 축소합니다.
+ * answerKey는 본문 하단에 공간 여유가 있을 때 병합 배치되며, 공간 부족 시 자동으로 새 페이지로 분리됩니다.
+ * 통일된 여백을 유지하며, 폰트 로딩 및 인쇄 직전 레이아웃을 재측정하여 문제가 잘리지 않도록 보호합니다.
  */
 export function A4Sheet({ children, fit = false, answerKey }: {
   children: React.ReactNode;
@@ -21,7 +21,7 @@ export function A4Sheet({ children, fit = false, answerKey }: {
     if (!content) return;
     let disposed = false;
 
-    // 先恢复自然高度再测量，避免上一次缩放影响新题量的排版。
+    // 이전 축소 비율이 새 문항 배치에 왜곡을 주지 않도록 기본 높이로 복원 후 재측정
     const fitContent = () => {
       if (disposed) return;
       content.style.zoom = '1';
@@ -35,7 +35,7 @@ export function A4Sheet({ children, fit = false, answerKey }: {
         setSeparateAnswer(nextSeparate);
         return;
       }
-      // 横式和带余数题目的最小列宽也参与缩放，避免相邻列互相覆盖。
+      // 가로셈 및 나머지 연산 문항의 최소 열 너비를 축소 계산에 반영하여 인접 열 겹침 방지
       const grid = content.querySelector<HTMLElement>('.worksheet-grid');
       const gridStyle = grid ? getComputedStyle(grid) : null;
       const columnCount = gridStyle?.gridTemplateColumns.split(' ').length ?? 1;

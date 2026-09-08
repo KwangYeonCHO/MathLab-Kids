@@ -17,7 +17,7 @@ interface HorizontalProblemProps {
   showAnswer?: boolean;
   showExampleAnswer?: boolean;
   compact?: boolean;
-  fullWidth?: boolean; // 新增：撑满整列宽度并右对齐答题框
+  fullWidth?: boolean; // 열 너비 전체를 채우고 입력 박스를 우측 정렬
   density?: 'normal' | 'compact' | 'dense' | 'ultra-dense';
   virtualKeyboard?: boolean;
 }

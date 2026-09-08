@@ -3,7 +3,7 @@ import type { NextConfig } from "next";
 import fs from "fs";
 import path from "path";
 
-// 修复 Windows RaiDrive / 虚拟网络驱动器上 fs.readlink 返回 EISDIR 替代 EINVAL 导致 Webpack 崩溃的问题
+// Windows RaiDrive / 가상 네트워크 드라이브에서 fs.readlink가 EINVAL 대신 EISDIR을 반환하여 Webpack이 충돌하는 문제 패치
 function patchFsReadlink() {
   const origReadlink = fs.readlink;
   const origReadlinkSync = fs.readlinkSync;
@@ -89,10 +89,10 @@ class FixRaiDrivePlugin {
   }
 }
 
-// 自动动态获取当前项目所在根目录的名称（例如 'math'、'Math' 或任意自定义目录名）
+// 현재 프로젝트의 루트 디렉터리 이름(예: 'math', 'Math' 등)을 동적으로 감지
 const currentDirName = path.basename(process.cwd());
 
-// 优先使用 BASE_PATH 环境变量；若未提供，则全自动匹配当前根目录名称
+// BASE_PATH 환경 변수를 우선 적용하며, 미지정 시 현재 루트 디렉터리 이름으로 자동 매핑
 const basePath =
   process.env.BASE_PATH !== undefined
     ? process.env.BASE_PATH

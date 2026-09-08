@@ -34,7 +34,7 @@ const config: Config = {
     },
   },
   plugins: [plugin(({ addVariant }) => {
-    // 纸张内部使用同一套样式，优先级高于屏幕断点，预览和打印均生效。
+    // 용지 내부에서 동일한 스타일을 적용하며, 화면 반응형보다 우선하여 미리보기와 인쇄 모두에 적용됩니다.
     addVariant('paper', '.a4-sheet &');
   })],
 };

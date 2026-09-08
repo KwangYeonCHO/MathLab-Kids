@@ -36,14 +36,14 @@ export default function PrintPage() {
   const isCompact = printIsCompact ?? true;
   const fontScale = printFontScale ?? 1.0;
 
-  // 确保第一份题目生成，若为空则由 store 生成
+  // 첫 번째 문제 세트 생성 확인 (비어있을 경우 스토어에서 생성)
   useEffect(() => {
     if (problems.length === 0) {
       generateNewProblems();
     }
   }, [problems.length, generateNewProblems]);
 
-  // 根据当前规则与 sheetCount 准备各张纸的独立随机题目集
+  // 현재 규칙 및 sheetCount에 따라 각 용지별 독립적인 무작위 문제 세트 준비
   useEffect(() => {
     setSheets((prev) => {
       const firstSet =
@@ -63,7 +63,7 @@ export default function PrintPage() {
         }
       }
 
-      // 不足 sheetCount 时，补充独立随机生成的题目集
+      // sheetCount보다 부족한 경우 독립적으로 무작위 생성된 문제 세트 보충
       for (let i = newSheets.length; i < sheetCount; i++) {
         const res = generateWorksheet(currentRule);
         if (res.success && res.problems.length > 0) {
@@ -283,7 +283,7 @@ export default function PrintPage() {
               ))}
             </div>
 
-            {/* 4. 수식 글자 크기 조절 (행/열 栅格 유지, 내용물만 확대/축소) */}
+            {/* 4. 수식 글자 크기 조절 (행/열 그리드 유지, 내용물만 확대/축소) */}
             <div className="flex items-center bg-slate-50 p-1 rounded-xl border border-slate-200">
               <span className="px-2 font-bold text-slate-500 flex items-center gap-1">
                 <Type className="w-3.5 h-3.5 text-slate-400" />

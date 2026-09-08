@@ -66,7 +66,7 @@ body {
   }
 }
 
-/* 预览与打印共用 210×297mm 纸张和 12mm 页边距，不随视口改变排版。 */
+/* 미리보기와 인쇄 공통 210×297mm 용지 규격 및 12mm 여백 적용 (화면 크기에 영향받지 않는 고정 레이아웃) */
 .a4-preview { overflow-x: auto; }
 .a4-sheet {
   box-sizing: border-box;
@@ -82,7 +82,7 @@ body {
 .a4-sheet-content, .a4-page-worksheet { display: flex; flex-direction: column; }
 .a4-page-worksheet { flex: 1; }
 .a4-page-worksheet > :not(.worksheet-grid) { flex-shrink: 0; }
-/* 将剩余高度均分给题目行，保留书写空间；超高时由 A4Sheet 整体缩放。 */
+/* 남은 높이를 문제 행에 균등 분할하여 풀이 공간 확보; 초과 시 A4Sheet에서 전체 축소 조절 */
 .worksheet-grid { flex: 1; grid-auto-rows: 1fr; }
 .a4-answer-section { flex-shrink: 0; padding-top: 4mm; }
 .a4-answer-key { break-inside: avoid; }
@@ -103,7 +103,7 @@ body {
     margin-bottom: 0 !important;
   }
 
-  /* 多张打印时：每个 sheet-wrapper 从新的一页开始，第一张不强制分页 */
+  /* 여러 장 인쇄 시: 각 sheet-wrapper를 새 페이지에서 시작하며, 첫 페이지는 강제 페이지 분할을 제외 */
   .sheet-wrapper {
     margin: 0 !important;
     padding: 0 !important;
@@ -117,7 +117,7 @@ body {
     page-break-before: auto !important;
   }
 
-  /* 纸张容器：sheet-wrapper 已经完成了分页，其内部第一张 a4-sheet 绝不重复分页；只有答案独立分页时才在内部另起一页 */
+  /* 용지 컨테이너: sheet-wrapper가 페이지 분할을 수행하므로 내부 첫 번째 a4-sheet는 중복 분할되지 않으며, 정답지 분리 시에만 내부 분할 실행 */
   .a4-sheet {
     margin: 0 !important;
     box-shadow: none !important;

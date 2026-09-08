@@ -55,7 +55,7 @@ interface PrintWorksheetProps {
   fontScale?: number;
 }
 
-/** 根据题量、列数及压缩选项生成题目网格，由 A4Sheet 分配实际纸张空间。 */
+/** 문항 수, 열 수 및 압축 옵션에 따라 문제 그리드를 생성하며, A4Sheet에서 실제 용지 공간을 배분합니다. */
 export function PrintWorksheet({
   rule,
   problems,
