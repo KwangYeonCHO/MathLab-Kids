@@ -99,6 +99,23 @@ export function VerticalProblem({
     ? 'w-full border-b-[1.5px] border-slate-900 my-0.5 paper:my-0.5'
     : 'w-full border-b-2 border-slate-900 my-1 sm:my-1.5 paper:my-0.5';
 
+  const valStr =
+    rawInput !== undefined && rawInput !== ''
+      ? String(rawInput)
+      : userAnswer !== null && userAnswer !== undefined
+      ? String(userAnswer)
+      : '';
+
+  const getAdaptiveFontClass = (text: string) => {
+    const len = text ? text.length : 1;
+    if (density === 'ultra-dense') return len >= 4 ? 'text-[10px]' : 'text-xs';
+    if (density === 'dense') return len >= 4 ? 'text-xs' : 'text-sm';
+    if (compact || density === 'compact') return len >= 4 ? 'text-sm' : 'text-base';
+    if (len >= 5) return 'text-sm sm:text-base';
+    if (len >= 4) return 'text-base sm:text-lg';
+    return 'text-lg sm:text-xl';
+  };
+
   return (
     <div
       className={`inline-block ${cardPadding} bg-white rounded-xl border border-slate-200 shadow-xs paper:border-0 paper:shadow-none paper:bg-transparent text-slate-800`}
@@ -149,13 +166,7 @@ export function VerticalProblem({
             <input
               type="text"
               inputMode={virtualKeyboard ? 'none' : 'numeric'}
-              value={
-                rawInput !== undefined && rawInput !== ''
-                  ? rawInput
-                  : userAnswer !== null && userAnswer !== undefined
-                  ? userAnswer
-                  : ''
-              }
+              value={valStr}
               onFocus={onFocus}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
@@ -173,7 +184,7 @@ export function VerticalProblem({
                 }
               }}
               placeholder="?"
-              className="w-full text-right font-bold text-slate-900 bg-slate-50 border-2 border-slate-300 focus:border-emerald-500 focus:bg-white rounded-lg px-2 py-0.5 outline-none transition-colors"
+              className={`w-full text-right font-bold text-slate-900 bg-slate-50 border-2 border-slate-300 focus:border-emerald-500 focus:bg-white rounded-lg px-1.5 py-0.5 outline-none transition-colors ${getAdaptiveFontClass(valStr)} placeholder:text-slate-400 placeholder:text-sm`}
             />
           )}
         </div>

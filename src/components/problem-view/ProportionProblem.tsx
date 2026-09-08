@@ -70,11 +70,19 @@ export function ProportionProblem({
       );
     }
 
+    const valStr = userAnswer !== null && userAnswer !== undefined ? String(userAnswer) : '';
+    const adaptiveFont =
+      valStr.length >= 4
+        ? 'text-xs sm:text-sm'
+        : valStr.length === 3
+        ? 'text-sm sm:text-base'
+        : 'text-base sm:text-lg';
+
     return (
       <input
         type="text"
         inputMode={virtualKeyboard ? 'none' : 'numeric'}
-        value={userAnswer !== null && userAnswer !== undefined ? userAnswer : ''}
+        value={valStr}
         onKeyDown={(e) => {
           if (e.key === 'Enter') onSubmit?.();
         }}
@@ -88,7 +96,7 @@ export function ProportionProblem({
           }
         }}
         placeholder="?"
-        className={`${boxSizeClass} text-center font-bold text-slate-900 bg-white border-2 border-slate-300 focus:border-emerald-500 rounded-lg outline-none transition-colors shadow-xs`}
+        className={`${boxSizeClass} ${adaptiveFont} px-1 text-center font-bold text-slate-900 bg-white border-2 border-slate-300 focus:border-emerald-500 rounded-lg outline-none transition-colors shadow-xs placeholder:text-slate-400 placeholder:text-sm`}
       />
     );
   };

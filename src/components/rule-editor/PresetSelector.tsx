@@ -5,6 +5,7 @@ import { GRADE_PRESETS } from '@/domain/math/presets';
 import { matchesPreset } from '@/domain/math/ruleTitle';
 import { useWorksheetStore } from '@/stores/worksheetStore';
 import { Sparkles } from 'lucide-react';
+import { CreateActionButtons } from './CreateActionButtons';
 
 export function PresetSelector() {
   const { currentRule, currentPresetId, loadPreset } = useWorksheetStore();
@@ -85,6 +86,11 @@ export function PresetSelector() {
             </button>
           );
         })}
+      </div>
+
+      {/* 하단 액션 버튼 (인쇄하기 / 온라인으로 풀기) */}
+      <div className="flex items-center justify-end pt-3 border-t border-slate-100">
+        <CreateActionButtons />
       </div>
     </div>
   );

@@ -77,16 +77,56 @@ export function HorizontalProblem({
     : density === 'dense'
     ? 'w-10 h-6 paper:w-9 paper:h-[18px]'
     : compact || density === 'compact'
-    ? 'w-11 h-7 sm:w-12 sm:h-[30px] paper:w-10 paper:h-[22px]'
+    ? 'w-12 h-7 sm:w-14 sm:h-[30px] paper:w-10 paper:h-[22px]'
     : 'w-14 h-8 sm:w-16 sm:h-9 paper:w-12 paper:h-7';
 
   const remainderBoxSizeClass = density === 'ultra-dense'
-    ? 'w-7 h-5 paper:w-[26px] paper:h-4'
+    ? 'w-9 h-5 paper:w-8 paper:h-4'
     : density === 'dense'
-    ? 'w-8 h-6 paper:w-[30px] paper:h-[18px]'
+    ? 'w-10 h-6 paper:w-9 paper:h-[18px]'
     : compact || density === 'compact'
-    ? 'w-9 h-7 sm:w-10 sm:h-[30px] paper:w-[34px] paper:h-[22px]'
-    : 'w-11 h-8 sm:w-12 sm:h-9 paper:w-10 paper:h-7';
+    ? 'w-12 h-7 sm:w-14 sm:h-[30px] paper:w-10 paper:h-[22px]'
+    : 'w-14 h-8 sm:w-16 sm:h-9 paper:w-12 paper:h-7';
+
+  // 입력값 길이 및 상자 크기에 따라 폰트 크기를 지능적으로 자동 조정 (글자가 상자 밖으로 넘치지 않도록 방지)
+  const getAdaptiveFontClass = (text: string, isRemainder: boolean = false) => {
+    const len = text ? text.length : isRemainder ? 3 : 1;
+    if (density === 'ultra-dense') {
+      return len >= 3 ? 'text-[9px]' : 'text-[10px]';
+    }
+    if (density === 'dense') {
+      return len >= 3 ? 'text-[10px]' : len === 2 ? 'text-xs' : 'text-xs';
+    }
+    if (compact || density === 'compact') {
+      return len >= 4 ? 'text-[10px]' : len >= 3 ? 'text-xs' : len === 2 ? 'text-xs sm:text-sm' : 'text-sm sm:text-base';
+    }
+    // 일반 모드 (Normal Mode)
+    if (len >= 5) {
+      return 'text-[11px] sm:text-xs';
+    }
+    if (len >= 4) {
+      return 'text-xs sm:text-sm';
+    }
+    if (len === 3) {
+      return 'text-xs sm:text-sm'; // 3글자 ('나머지', '0.9', '125' 등)는 12px~14px로 여유 있게 맞춤
+    }
+    if (len === 2) {
+      return 'text-sm sm:text-base';
+    }
+    return 'text-base sm:text-lg'; // 1글자 ('몫', '?', '5' 등)는 16px~18px
+  };
+
+  const answerDisplayValue =
+    rawInput !== undefined && rawInput !== ''
+      ? String(rawInput)
+      : userAnswer !== null && userAnswer !== undefined
+      ? String(userAnswer)
+      : '';
+
+  const remainderDisplayValue =
+    userRemainder !== null && userRemainder !== undefined
+      ? String(userRemainder)
+      : '';
 
   const containerClass = fullWidth
     ? `w-full flex items-center justify-between flex-nowrap whitespace-nowrap font-bold text-slate-800 math-font ${fontClass}`
@@ -152,13 +192,7 @@ export function HorizontalProblem({
           <input
             type="text"
             inputMode={virtualKeyboard ? 'none' : 'numeric'}
-            value={
-              rawInput !== undefined && rawInput !== ''
-                ? rawInput
-                : userAnswer !== null && userAnswer !== undefined
-                ? userAnswer
-                : ''
-            }
+            value={answerDisplayValue}
             onFocus={onFocusAnswer}
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
@@ -176,7 +210,7 @@ export function HorizontalProblem({
               }
             }}
             placeholder={isDivisionWithRemainder ? '몫' : '?'}
-            className={`${boxSizeClass} text-center font-bold text-slate-900 bg-white border-2 border-slate-300 focus:border-emerald-500 rounded-lg outline-none transition-colors shadow-xs`}
+            className={`${boxSizeClass} ${getAdaptiveFontClass(answerDisplayValue, false)} px-1 text-center font-bold text-slate-900 bg-white border-2 border-slate-300 focus:border-emerald-500 rounded-lg outline-none transition-colors shadow-xs placeholder:text-slate-400 placeholder:font-bold placeholder:text-xs sm:placeholder:text-sm`}
           />
 
           {/* 나눗셈 나머지 입력 칸 */}
@@ -186,7 +220,7 @@ export function HorizontalProblem({
               <input
                 type="text"
                 inputMode={virtualKeyboard ? 'none' : 'numeric'}
-                value={userRemainder !== null && userRemainder !== undefined ? userRemainder : ''}
+                value={remainderDisplayValue}
                 onFocus={onFocusRemainder}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
@@ -194,16 +228,16 @@ export function HorizontalProblem({
                   }
                 }}
                 onChange={(e) => {
-                  const val = normalizeNumeric(e.target.value).replace(/[^0-9]/g, '');
+                  const val = normalizeNumeric(e.target.value).replace(/[^0-9.]/g, '');
                   if (val === '') {
                     onRemainderChange?.(null);
                   } else {
-                    const parsed = parseInt(val, 10);
+                    const parsed = problem.category === 'decimal' ? parseFloat(val) : parseInt(val, 10);
                     onRemainderChange?.(isNaN(parsed) ? null : parsed);
                   }
                 }}
                 placeholder="나머지"
-                className={`${remainderBoxSizeClass} text-center font-bold text-slate-900 bg-white border-2 border-amber-300 focus:border-amber-500 rounded-lg outline-none transition-colors shadow-xs`}
+                className={`${remainderBoxSizeClass} ${getAdaptiveFontClass(remainderDisplayValue, true)} px-1 text-center font-bold text-slate-900 bg-white border-2 border-amber-300 focus:border-amber-500 rounded-lg outline-none transition-colors shadow-xs placeholder:text-amber-600/70 placeholder:font-bold placeholder:text-[11px] sm:placeholder:text-xs`}
               />
             </>
           )}

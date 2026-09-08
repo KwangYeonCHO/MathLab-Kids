@@ -66,25 +66,36 @@ export function FactorProblem({
       ) : isReadOnly ? (
         <div className={`${boxSizeClass} border-2 border-slate-300 paper:border-slate-400 rounded-md bg-white flex-shrink-0`} />
       ) : (
-        <input
-          type="text"
-          inputMode={virtualKeyboard ? 'none' : 'numeric'}
-          value={userAnswer !== null && userAnswer !== undefined ? userAnswer : ''}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') onSubmit?.();
-          }}
-          onChange={(e) => {
-            const val = e.target.value.replace(/[^0-9]/g, '');
-            if (val === '') {
-              onAnswerChange?.(null);
-            } else {
-              const parsed = parseInt(val, 10);
-              onAnswerChange?.(isNaN(parsed) ? null : parsed);
-            }
-          }}
-          placeholder="?"
-          className={`${boxSizeClass} text-center font-bold text-slate-900 bg-white border-2 border-slate-300 focus:border-emerald-500 rounded-lg outline-none transition-colors shadow-xs`}
-        />
+        (() => {
+          const valStr = userAnswer !== null && userAnswer !== undefined ? String(userAnswer) : '';
+          const adaptiveFont =
+            valStr.length >= 4
+              ? 'text-xs sm:text-sm'
+              : valStr.length === 3
+              ? 'text-sm sm:text-base'
+              : 'text-base sm:text-lg';
+          return (
+            <input
+              type="text"
+              inputMode={virtualKeyboard ? 'none' : 'numeric'}
+              value={valStr}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') onSubmit?.();
+              }}
+              onChange={(e) => {
+                const val = e.target.value.replace(/[^0-9]/g, '');
+                if (val === '') {
+                  onAnswerChange?.(null);
+                } else {
+                  const parsed = parseInt(val, 10);
+                  onAnswerChange?.(isNaN(parsed) ? null : parsed);
+                }
+              }}
+              placeholder="?"
+              className={`${boxSizeClass} ${adaptiveFont} px-1 text-center font-bold text-slate-900 bg-white border-2 border-slate-300 focus:border-emerald-500 rounded-lg outline-none transition-colors shadow-xs placeholder:text-slate-400 placeholder:text-sm`}
+            />
+          );
+        })()
       )}
     </div>
   );

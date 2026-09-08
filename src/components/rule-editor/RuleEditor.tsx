@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useWorksheetStore } from '@/stores/worksheetStore';
 import { Operation, CarryCondition, BorrowCondition, DivisionRemainderCondition, DisplayFormat, UniqueMode } from '@/domain/math/types';
 import { PresetSelector } from './PresetSelector';
+import { CreateActionButtons } from './CreateActionButtons';
 import { Sliders, Settings2, Check, RotateCcw } from 'lucide-react';
 
 export function RuleEditor() {
@@ -457,6 +458,11 @@ export function RuleEditor() {
             </div>
           </div>
         )}
+
+        {/* 하단 액션 버튼 (인쇄하기 / 온라인으로 풀기) */}
+        <div className="flex items-center justify-end pt-4 border-t border-slate-100">
+          <CreateActionButtons />
+        </div>
       </div>
     </div>
   );

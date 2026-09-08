@@ -61,6 +61,12 @@ export function FractionProblem({
     ? 'w-7 h-5 sm:w-8 sm:h-5 text-xs'
     : 'w-9 h-6 sm:w-10 sm:h-7 text-sm';
 
+  const wholeBoxSize = isUltraDense
+    ? 'w-8 h-4 text-[9px]'
+    : isDense
+    ? 'w-10 h-5 sm:w-11 sm:h-5 text-xs'
+    : 'w-12 h-6 sm:w-14 sm:h-7 text-sm';
+
   const renderFractionDisplay = (f: FractionValue, isHighlight: boolean = false) => {
     return (
       <div className={`inline-flex items-center gap-0.5 ${isHighlight ? 'text-emerald-700 font-extrabold' : 'text-slate-800 font-bold'}`}>
@@ -126,9 +132,9 @@ export function FractionProblem({
                 denominator: userFraction?.denominator || 1,
               });
             }}
-            className={`${boxSize} text-center font-bold bg-white border-2 ${
+            className={`${wholeBoxSize} px-0.5 text-center font-bold bg-white border-2 ${
               activePart === 'whole' ? 'border-emerald-500' : 'border-slate-300'
-            } rounded outline-none`}
+            } rounded outline-none placeholder:text-[10px] sm:placeholder:text-xs placeholder:font-normal placeholder:text-slate-400`}
           />
 
           {/* 분자 / 분모 스택 */}
@@ -148,9 +154,9 @@ export function FractionProblem({
                   denominator: userFraction?.denominator || 1,
                 });
               }}
-              className={`${boxSize} text-center font-bold bg-white border-2 ${
+              className={`${boxSize} px-0.5 text-center font-bold bg-white border-2 ${
                 activePart === 'num' ? 'border-emerald-500' : 'border-slate-300'
-              } rounded outline-none`}
+              } rounded outline-none placeholder:text-[10px] sm:placeholder:text-xs placeholder:font-normal placeholder:text-slate-400`}
             />
             <div className="w-full h-[1.5px] bg-slate-400" />
             <input
@@ -168,9 +174,9 @@ export function FractionProblem({
                   denominator: parsed,
                 });
               }}
-              className={`${boxSize} text-center font-bold bg-white border-2 ${
+              className={`${boxSize} px-0.5 text-center font-bold bg-white border-2 ${
                 activePart === 'den' ? 'border-emerald-500' : 'border-slate-300'
-              } rounded outline-none`}
+              } rounded outline-none placeholder:text-[10px] sm:placeholder:text-xs placeholder:font-normal placeholder:text-slate-400`}
             />
           </div>
         </div>
