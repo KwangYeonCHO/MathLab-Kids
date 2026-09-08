@@ -15,6 +15,7 @@ interface ChildKeypadProps {
   canPrev?: boolean;
   canNext?: boolean;
   allowNegative?: boolean;
+  allowDecimal?: boolean;
   onToggleNegative?: () => void;
 }
 
@@ -28,6 +29,7 @@ export function ChildKeypad({
   canPrev = true,
   canNext = true,
   allowNegative = false,
+  allowDecimal = false,
   onToggleNegative,
 }: ChildKeypadProps) {
   const { soundEnabled } = useWorksheetStore();
@@ -54,8 +56,17 @@ export function ChildKeypad({
           </button>
         ))}
 
-        {/* 하단 행: 음수부호/전체지우기 | 0 | 백스페이스 */}
-        {allowNegative ? (
+        {/* 하단 행: 소수점/음수부호/전체지우기 | 0 | 백스페이스 */}
+        {allowDecimal ? (
+          <button
+            type="button"
+            onClick={() => handlePress(() => onDigit('.'))}
+            title="소수점"
+            className="h-[42px] sm:h-14 bg-white hover:bg-slate-50 active:bg-slate-200 text-2xl sm:text-3xl font-black text-slate-800 rounded-xl shadow-2xs sm:shadow-sm border border-slate-200 active:scale-95 transition-all flex items-center justify-center math-font"
+          >
+            .
+          </button>
+        ) : allowNegative ? (
           <button
             type="button"
             onClick={() => handlePress(() => onToggleNegative?.())}

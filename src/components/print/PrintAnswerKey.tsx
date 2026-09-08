@@ -4,6 +4,8 @@ import React from 'react';
 import { Problem, WorksheetRule } from '@/domain/math/types';
 import { Scissors } from 'lucide-react';
 
+import { formatFraction } from '@/domain/math/core/fraction';
+
 interface PrintAnswerKeyProps {
   rule: WorksheetRule;
   problems: Problem[];
@@ -13,11 +15,11 @@ interface PrintAnswerKeyProps {
   showCutLine?: boolean;
 }
 
-/** 将规则标题和题目答案渲染为紧凑答案区，每行固定 15 列，保证纵向严整对齐。 */
+/** 将规则标题和题目答案渲染为紧凑答案区，保证纵向严整对齐。 */
 export function PrintAnswerKey({
   rule,
   problems,
-  columns = 15,
+  columns,
   sheetIndex,
   totalSheets,
   showCutLine = true,
@@ -27,6 +29,9 @@ export function PrintAnswerKey({
     month: 'long',
     day: 'numeric',
   });
+
+  const effectiveColumns =
+    columns ?? (rule.category === 'fraction' ? 10 : 15);
 
   return (
     <div className="a4-answer-key">
@@ -68,11 +73,11 @@ export function PrintAnswerKey({
         title="프린터 헤드 노즐 막힘 방지 3mm 레인보우 컬러 밴드"
       />
 
-      {/* 答案网格：每行固定 15 个答案，列与列纵向严格对齐 */}
+      {/* 答案网格：每行固定答案，列与列纵向严格对齐 */}
       <div
-        className="grid gap-x-1 gap-y-1 w-full grid-cols-15"
+        className={`grid grid-cols-${effectiveColumns} gap-x-1 gap-y-1 w-full`}
         style={{
-          gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`,
+          gridTemplateColumns: `repeat(${effectiveColumns}, minmax(0, 1fr))`,
         }}
       >
         {problems.map((problem) => {
@@ -87,12 +92,18 @@ export function PrintAnswerKey({
               <span className="font-bold text-[9.5px] text-slate-400 shrink-0 inline-block min-w-[20px] tabular-nums">
                 [{problem.index}]
               </span>
-              <span className="font-black text-slate-900 tabular-nums ml-0.5 text-[11.5px] leading-none">
-                {problem.answer}
-                {hasRemainder && (
-                  <span className="text-[9.5px] text-slate-600 font-semibold ml-0.5">
-                    …{problem.remainder}
-                  </span>
+              <span className="font-black text-slate-900 tabular-nums ml-0.5 text-[11px] leading-none">
+                {problem.category === 'fraction' && problem.fractionAnswer ? (
+                  formatFraction(problem.fractionAnswer)
+                ) : (
+                  <>
+                    {problem.answer}
+                    {hasRemainder && (
+                      <span className="text-[9.5px] text-slate-600 font-semibold ml-0.5">
+                        …{problem.remainder}
+                      </span>
+                    )}
+                  </>
                 )}
               </span>
             </div>

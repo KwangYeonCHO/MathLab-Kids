@@ -7,6 +7,7 @@ interface HorizontalProblemProps {
   problem: Problem;
   userAnswer?: number | null;
   userRemainder?: number | null;
+  rawInput?: string;
   onAnswerChange?: (val: number | null) => void;
   onRemainderChange?: (val: number | null) => void;
   onFocusAnswer?: () => void;
@@ -21,11 +22,14 @@ interface HorizontalProblemProps {
   virtualKeyboard?: boolean;
 }
 
-function normalizeNumeric(val: string): string {
+function normalizeNumeric(val: string, allowDecimal = false): string {
   // Convert full-width digits (０-９) to standard (0-9)
   const normalized = val.replace(/[\uFF10-\uFF19]/g, (ch) =>
     String.fromCharCode(ch.charCodeAt(0) - 0xFEE0)
   );
+  if (allowDecimal) {
+    return normalized.replace(/[^0-9.-]/g, '');
+  }
   return normalized.replace(/[^0-9-]/g, '');
 }
 
@@ -33,6 +37,7 @@ export function HorizontalProblem({
   problem,
   userAnswer,
   userRemainder,
+  rawInput,
   onAnswerChange,
   onRemainderChange,
   onFocusAnswer,
@@ -147,7 +152,13 @@ export function HorizontalProblem({
           <input
             type="text"
             inputMode={virtualKeyboard ? 'none' : 'numeric'}
-            value={userAnswer !== null && userAnswer !== undefined ? userAnswer : ''}
+            value={
+              rawInput !== undefined && rawInput !== ''
+                ? rawInput
+                : userAnswer !== null && userAnswer !== undefined
+                ? userAnswer
+                : ''
+            }
             onFocus={onFocusAnswer}
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
@@ -155,11 +166,12 @@ export function HorizontalProblem({
               }
             }}
             onChange={(e) => {
-              const val = normalizeNumeric(e.target.value);
+              const isDecimal = problem.category === 'decimal';
+              const val = normalizeNumeric(e.target.value, isDecimal);
               if (val === '' || val === '-') {
                 onAnswerChange?.(null);
               } else {
-                const parsed = parseInt(val, 10);
+                const parsed = isDecimal ? parseFloat(val) : parseInt(val, 10);
                 onAnswerChange?.(isNaN(parsed) ? null : parsed);
               }
             }}

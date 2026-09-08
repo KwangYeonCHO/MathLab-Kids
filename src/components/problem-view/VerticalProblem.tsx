@@ -6,6 +6,7 @@ import { Problem } from '@/domain/math/types';
 interface VerticalProblemProps {
   problem: Problem;
   userAnswer?: number | null;
+  rawInput?: string;
   onAnswerChange?: (val: number | null) => void;
   onFocus?: () => void;
   onSubmit?: () => void;
@@ -17,16 +18,20 @@ interface VerticalProblemProps {
   virtualKeyboard?: boolean;
 }
 
-function normalizeNumeric(val: string): string {
+function normalizeNumeric(val: string, allowDecimal = false): string {
   const normalized = val.replace(/[\uFF10-\uFF19]/g, (ch) =>
     String.fromCharCode(ch.charCodeAt(0) - 0xFEE0)
   );
+  if (allowDecimal) {
+    return normalized.replace(/[^0-9.-]/g, '');
+  }
   return normalized.replace(/[^0-9-]/g, '');
 }
 
 export function VerticalProblem({
   problem,
   userAnswer,
+  rawInput,
   onAnswerChange,
   onFocus,
   onSubmit,
@@ -144,7 +149,13 @@ export function VerticalProblem({
             <input
               type="text"
               inputMode={virtualKeyboard ? 'none' : 'numeric'}
-              value={userAnswer !== null && userAnswer !== undefined ? userAnswer : ''}
+              value={
+                rawInput !== undefined && rawInput !== ''
+                  ? rawInput
+                  : userAnswer !== null && userAnswer !== undefined
+                  ? userAnswer
+                  : ''
+              }
               onFocus={onFocus}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
@@ -152,11 +163,12 @@ export function VerticalProblem({
                 }
               }}
               onChange={(e) => {
-                const val = normalizeNumeric(e.target.value);
+                const isDecimal = problem.category === 'decimal';
+                const val = normalizeNumeric(e.target.value, isDecimal);
                 if (val === '' || val === '-') {
                   onAnswerChange?.(null);
                 } else {
-                  const parsed = parseInt(val, 10);
+                  const parsed = isDecimal ? parseFloat(val) : parseInt(val, 10);
                   onAnswerChange?.(isNaN(parsed) ? null : parsed);
                 }
               }}

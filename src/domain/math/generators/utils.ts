@@ -1,7 +1,7 @@
 /**
  * 수학 연산 생성기 유틸리티 함수
  */
-import { Operation, UniqueMode } from '../types';
+import { Operation, UniqueMode, Problem } from '../types';
 
 export function getRandomInt(min: number, max: number): number {
   const cmin = Math.ceil(min);
@@ -31,7 +31,31 @@ export function getRangeForDigit(digit: number, allowZero: boolean = false): { m
   return { min, max };
 }
 
-export function makeProblemKey(operation: Operation, a: number, b: number, uniqueMode: UniqueMode): string {
+export function makeProblemKey(
+  operation: Operation,
+  a: number,
+  b: number,
+  uniqueMode: UniqueMode,
+  problem?: Problem
+): string {
+  if (problem) {
+    if (problem.category === 'fraction' && problem.fractionA && problem.fractionB) {
+      const fA = `${problem.fractionA.whole || 0}_${problem.fractionA.numerator}/${problem.fractionA.denominator}`;
+      const fB = `${problem.fractionB.whole || 0}_${problem.fractionB.numerator}/${problem.fractionB.denominator}`;
+      return `frac:${operation}:${fA}:${fB}`;
+    }
+    if (problem.category === 'mixed_operation' && problem.expression) {
+      return `mix:${problem.expression}`;
+    }
+    if (problem.category === 'proportion' && problem.proportion) {
+      const p = problem.proportion;
+      return `prop:${p.a}:${p.b}=${p.c}:${p.d}`;
+    }
+    if (problem.category === 'factors_multiples') {
+      return `fact:${problem.factorProblemType}:${problem.operandA},${problem.operandB}`;
+    }
+  }
+
   if (uniqueMode === 'commutative' && (operation === 'addition' || operation === 'multiplication')) {
     const min = Math.min(a, b);
     const max = Math.max(a, b);

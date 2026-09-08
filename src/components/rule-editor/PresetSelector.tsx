@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { GRADE_PRESETS } from '@/domain/math/presets';
 import { matchesPreset } from '@/domain/math/ruleTitle';
 import { useWorksheetStore } from '@/stores/worksheetStore';
@@ -8,17 +8,53 @@ import { Sparkles } from 'lucide-react';
 
 export function PresetSelector() {
   const { currentRule, loadPreset } = useWorksheetStore();
+  const [selectedGrade, setSelectedGrade] = useState<string>('all');
+
+  const gradeTabs = [
+    { id: 'all', label: '전체 (24)' },
+    { id: '초1', label: '1학년' },
+    { id: '초2', label: '2학년' },
+    { id: '초3', label: '3학년' },
+    { id: '초4', label: '4학년' },
+    { id: '초5', label: '5학년' },
+    { id: '초6', label: '6학년' },
+  ];
+
+  const filteredPresets =
+    selectedGrade === 'all'
+      ? GRADE_PRESETS
+      : GRADE_PRESETS.filter((p) => p.gradeShort === selectedGrade);
 
   return (
-    <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-      <div className="flex items-center gap-2 mb-3">
-        <Sparkles className="w-5 h-5 text-amber-500" />
-        <h3 className="font-bold text-slate-800 text-base">학년별 빠른 설정</h3>
-        <span className="text-xs text-slate-500 font-normal">자주 쓰는 공식 추천 규칙</span>
+    <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <Sparkles className="w-5 h-5 text-amber-500" />
+          <h3 className="font-bold text-slate-800 text-base">학년별 빠른 설정</h3>
+          <span className="text-xs text-slate-500 font-normal">자주 쓰는 공식 추천 규칙</span>
+        </div>
+
+        {/* 학년 필터 탭 */}
+        <div className="flex items-center gap-1 overflow-x-auto pb-1 scrollbar-none">
+          {gradeTabs.map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setSelectedGrade(tab.id)}
+              className={`px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap transition-all ${
+                selectedGrade === tab.id
+                  ? 'bg-emerald-600 text-white shadow-xs'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
-        {GRADE_PRESETS.map((preset) => {
+        {filteredPresets.map((preset) => {
           const isSelected = matchesPreset(currentRule, preset.rule);
           return (
             <button

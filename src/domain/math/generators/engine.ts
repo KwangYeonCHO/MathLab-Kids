@@ -7,6 +7,11 @@ import { generateAdditionProblem } from './addition';
 import { generateSubtractionProblem } from './subtraction';
 import { generateMultiplicationProblem } from './multiplication';
 import { generateDivisionProblem } from './division';
+import { generateFractionProblem } from './fractionGenerator';
+import { generateDecimalProblem } from './decimalGenerator';
+import { generateMixedOpProblem } from './mixedOpGenerator';
+import { generateProportionProblem } from './proportionGenerator';
+import { generateFactorProblem } from './factorGenerator';
 import { makeProblemKey, shuffle } from './utils';
 
 export interface GenerationResult {
@@ -37,7 +42,7 @@ export function generateWorksheet(rule: WorksheetRule): GenerationResult {
   const shuffledOps = shuffle(opAssignments);
 
   let consecutiveFailures = 0;
-  const maxFailures = 500;
+  const category = rule.category || 'arithmetic';
 
   for (let i = 0; i < totalCount; i++) {
     const op = shuffledOps[i];
@@ -46,23 +51,41 @@ export function generateWorksheet(rule: WorksheetRule): GenerationResult {
 
     // 현재 문제 생성 시도 (최대 50회 시도)
     for (let attempt = 0; attempt < 50; attempt++) {
-      switch (op) {
-        case 'addition':
-          created = generateAdditionProblem(rule, i + 1, false);
-          break;
-        case 'subtraction':
-          created = generateSubtractionProblem(rule, i + 1, false);
-          break;
-        case 'multiplication':
-          created = generateMultiplicationProblem(rule, i + 1, false);
-          break;
-        case 'division':
-          created = generateDivisionProblem(rule, i + 1, false);
-          break;
+      if (category === 'fraction') {
+        created = generateFractionProblem(rule, i + 1, false);
+      } else if (category === 'decimal') {
+        created = generateDecimalProblem(rule, i + 1, false);
+      } else if (category === 'mixed_operation') {
+        created = generateMixedOpProblem(rule, i + 1, false);
+      } else if (category === 'proportion') {
+        created = generateProportionProblem(rule, i + 1, false);
+      } else if (category === 'factors_multiples') {
+        created = generateFactorProblem(rule, i + 1, false);
+      } else {
+        switch (op) {
+          case 'addition':
+            created = generateAdditionProblem(rule, i + 1, false);
+            break;
+          case 'subtraction':
+            created = generateSubtractionProblem(rule, i + 1, false);
+            break;
+          case 'multiplication':
+            created = generateMultiplicationProblem(rule, i + 1, false);
+            break;
+          case 'division':
+            created = generateDivisionProblem(rule, i + 1, false);
+            break;
+        }
       }
 
       if (created) {
-        const key = makeProblemKey(created.operation, created.operandA, created.operandB, rule.uniqueMode);
+        const key = makeProblemKey(
+          created.operation,
+          created.operandA,
+          created.operandB,
+          rule.uniqueMode,
+          created
+        );
         if (!seenKeys.has(key)) {
           seenKeys.add(key);
           found = true;

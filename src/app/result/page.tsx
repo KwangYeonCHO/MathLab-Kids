@@ -7,6 +7,7 @@ import confetti from 'canvas-confetti';
 import { useWorksheetStore } from '@/stores/worksheetStore';
 import { getAllSessions } from '@/db/historyDb';
 import { Trophy, Clock, CheckCircle, XCircle, RotateCcw, PlusCircle, Printer, ArrowRight, BarChart2 } from 'lucide-react';
+import { formatFraction } from '@/domain/math/core/fraction';
 
 export default function ResultPage() {
   const router = useRouter();
@@ -209,11 +210,40 @@ export default function ResultPage() {
                   </div>
                   <div className="text-sm math-font font-bold text-slate-800">
                     <span className="text-xs text-slate-400 mr-2 font-mono">[{problem.index}]</span>
-                    {problem.operandA} {opSymbol} {problem.operandB} ={' '}
-                    <span className="text-slate-900 font-extrabold">{problem.answer}</span>
-                    {problem.operation === 'division' && problem.remainder !== undefined && (
-                      <span className="text-xs text-slate-500 font-medium ml-1">
-                        … {problem.remainder}
+                    {problem.category === 'fraction' ? (
+                      <span>
+                        {problem.fractionA ? formatFraction(problem.fractionA) : ''} {opSymbol}{' '}
+                        {problem.fractionB ? formatFraction(problem.fractionB) : ''} ={' '}
+                        <span className="text-slate-900 font-extrabold">
+                          {problem.fractionAnswer ? formatFraction(problem.fractionAnswer) : ''}
+                        </span>
+                      </span>
+                    ) : problem.category === 'mixed_operation' ? (
+                      <span>
+                        {problem.expression} ={' '}
+                        <span className="text-slate-900 font-extrabold">{problem.answer}</span>
+                      </span>
+                    ) : problem.category === 'proportion' && problem.proportion ? (
+                      <span>
+                        {problem.proportion.a ?? '□'} : {problem.proportion.b ?? '□'} ={' '}
+                        {problem.proportion.c ?? '□'} : {problem.proportion.d ?? '□'} (정답:{' '}
+                        <span className="text-slate-900 font-extrabold">{problem.answer}</span>)
+                      </span>
+                    ) : problem.category === 'factors_multiples' ? (
+                      <span>
+                        {problem.operandA}, {problem.operandB}의{' '}
+                        {problem.factorProblemType === 'lcm' ? '최소공배수' : '최대공약수'} ={' '}
+                        <span className="text-slate-900 font-extrabold">{problem.answer}</span>
+                      </span>
+                    ) : (
+                      <span>
+                        {problem.operandA} {opSymbol} {problem.operandB} ={' '}
+                        <span className="text-slate-900 font-extrabold">{problem.answer}</span>
+                        {problem.operation === 'division' && problem.remainder !== undefined && (
+                          <span className="text-xs text-slate-500 font-medium ml-1">
+                            … {problem.remainder}
+                          </span>
+                        )}
                       </span>
                     )}
                   </div>
@@ -228,7 +258,13 @@ export default function ResultPage() {
                         isCorrect ? 'text-emerald-700' : 'text-rose-700 font-extrabold'
                       }`}
                     >
-                      {userAns?.answer ?? '미입력'}
+                      {problem.category === 'fraction'
+                        ? userAns?.fractionAnswer
+                          ? formatFraction(userAns.fractionAnswer)
+                          : '미입력'
+                        : userAns?.answer !== null && userAns?.answer !== undefined
+                        ? userAns.answer
+                        : '미입력'}
                       {problem.operation === 'division' && problem.remainder !== undefined && (
                         <span className="ml-1 text-[11px]">
                           … {userAns?.remainder ?? 0}

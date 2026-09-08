@@ -2,15 +2,24 @@
 
 import React from 'react';
 import { Problem, WorksheetRule, DisplayFormat } from '@/domain/math/types';
-import { VerticalProblem } from '../problem-view/VerticalProblem';
-import { HorizontalProblem } from '../problem-view/HorizontalProblem';
+import { UniversalProblem } from '../problem-view/UniversalProblem';
 
 export type PrintDensity = 'normal' | 'compact' | 'dense' | 'ultra-dense';
 
 export function getAutoColumns(
   problemCount: number,
-  displayFormat?: DisplayFormat
+  displayFormat?: DisplayFormat,
+  category?: string
 ): 2 | 3 | 4 | 5 | 6 {
+  if (category === 'mixed_operation' || category === 'proportion') {
+    if (problemCount <= 12) return 2;
+    return 3;
+  }
+  if (category === 'fraction') {
+    if (problemCount <= 12) return 2;
+    if (problemCount <= 24) return 3;
+    return 4;
+  }
   if (displayFormat === 'vertical') {
     if (problemCount <= 12) return 3;
     if (problemCount <= 24) return 4;
@@ -64,7 +73,7 @@ export function PrintWorksheet({
 
   const effectiveColumns =
     columns === 'auto'
-      ? getAutoColumns(problems.length, rule.displayFormat)
+      ? getAutoColumns(problems.length, rule.displayFormat, rule.category)
       : Math.min(6, Math.max(2, columns)) as 2 | 3 | 4 | 5 | 6;
 
   const density = compact
@@ -179,23 +188,13 @@ export function PrintWorksheet({
                 }
                 data-font-scale={fontScale}
               >
-                {problem.displayFormat === 'vertical' ? (
-                  <VerticalProblem
-                    problem={problem}
-                    isReadOnly={true}
-                    showExampleAnswer={problem.isExample && rule.showFirstExample}
-                    compact={compact}
-                    density={density}
-                  />
-                ) : (
-                  <HorizontalProblem
-                    problem={problem}
-                    isReadOnly={true}
-                    showExampleAnswer={problem.isExample && rule.showFirstExample}
-                    compact={compact}
-                    density={density}
-                  />
-                )}
+                <UniversalProblem
+                  problem={problem}
+                  isReadOnly={true}
+                  showExampleAnswer={problem.isExample && rule.showFirstExample}
+                  compact={compact}
+                  density={density}
+                />
               </div>
             </div>
           </div>

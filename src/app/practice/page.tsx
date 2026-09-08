@@ -2,9 +2,9 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { useWorksheetStore } from '@/stores/worksheetStore';
-import { VerticalProblem } from '@/components/problem-view/VerticalProblem';
-import { HorizontalProblem } from '@/components/problem-view/HorizontalProblem';
+import { useWorksheetStore, evaluateProblemAnswer } from '@/stores/worksheetStore';
+import { UniversalProblem } from '@/components/problem-view/UniversalProblem';
+import { FractionValue } from '@/domain/math/core/fraction';
 import { ChildKeypad } from '@/components/keypad/ChildKeypad';
 import { playCorrectSound, playIncorrectSound } from '@/utils/sound';
 import { CheckCircle2, XCircle, ArrowLeft, ArrowRight, LayoutGrid, Square, Check, Clock, RotateCcw } from 'lucide-react';
@@ -32,7 +32,8 @@ export default function PracticePage() {
   } = useWorksheetStore();
 
   const [feedback, setFeedback] = useState<'correct' | 'incorrect' | null>(null);
-  const [activeInputType, setActiveInputType] = useState<'answer' | 'remainder'>('answer');
+  const [activeInputType, setActiveInputType] = useState<'answer' | 'remainder' | 'whole' | 'num' | 'den'>('answer');
+  const [activeFractionPart, setActiveFractionPart] = useState<'whole' | 'num' | 'den'>('num');
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
 
   // 문제 세트가 없으면 기본 문제 자동 생성
@@ -60,15 +61,47 @@ export default function PracticePage() {
   const isDivisionWithRemainder =
     currentProblem?.operation === 'division' && currentProblem?.remainder !== undefined;
 
-  // 문제 번호가 변경되면 항상 기본 답안(몫) 입력 모드로 자동 복귀
+  // 문제 번호가 변경되면 문제 종류에 따라 입력 모드 자동 설정
   useEffect(() => {
-    setActiveInputType('answer');
-  }, [currentIndex]);
+    if (currentProblem?.category === 'fraction') {
+      setActiveInputType('num');
+      setActiveFractionPart('num');
+    } else {
+      setActiveInputType('answer');
+    }
+  }, [currentIndex, currentProblem?.category]);
 
-  // 가상 키패드 입력 핸들러 (stale closure 방지를 위해 최신 store 상태 직접 조회)
+  // 가상 키패드 입력 핸들러
   const handleKeypadDigit = (digit: string) => {
     if (!currentProblem) return;
     const curAns = useWorksheetStore.getState().userAnswers[currentProblem.id];
+
+    if (currentProblem.category === 'fraction') {
+      const curFrac: FractionValue = curAns?.fractionAnswer || { numerator: 0, denominator: 1 };
+      if (activeInputType === 'whole') {
+        const prevStr = curFrac.whole !== undefined && curFrac.whole !== null ? curFrac.whole.toString() : '';
+        const nextVal = parseInt(prevStr + digit, 10);
+        setUserAnswer(currentProblem.id, undefined, undefined, {
+          ...curFrac,
+          whole: isNaN(nextVal) ? undefined : nextVal,
+        });
+      } else if (activeInputType === 'num') {
+        const prevStr = curFrac.numerator !== undefined && curFrac.numerator !== null && curFrac.numerator !== 0 ? curFrac.numerator.toString() : '';
+        const nextVal = parseInt(prevStr + digit, 10);
+        setUserAnswer(currentProblem.id, undefined, undefined, {
+          ...curFrac,
+          numerator: isNaN(nextVal) ? 0 : nextVal,
+        });
+      } else if (activeInputType === 'den') {
+        const prevStr = curFrac.denominator !== undefined && curFrac.denominator !== null && curFrac.denominator !== 1 ? curFrac.denominator.toString() : '';
+        const nextVal = parseInt(prevStr + digit, 10);
+        setUserAnswer(currentProblem.id, undefined, undefined, {
+          ...curFrac,
+          denominator: isNaN(nextVal) || nextVal === 0 ? 1 : nextVal,
+        });
+      }
+      return;
+    }
 
     if (activeInputType === 'remainder' && isDivisionWithRemainder) {
       const prevRem =
@@ -78,18 +111,58 @@ export default function PracticePage() {
       const nextRem = parseInt(prevRem + digit, 10);
       setUserAnswer(currentProblem.id, undefined, isNaN(nextRem) ? null : nextRem);
     } else {
-      const prevAns =
-        curAns?.answer !== null && curAns?.answer !== undefined
-          ? curAns.answer.toString()
-          : '';
-      const nextAns = parseInt(prevAns + digit, 10);
-      setUserAnswer(currentProblem.id, isNaN(nextAns) ? null : nextAns, undefined);
+      const prevRaw = curAns?.rawInput ?? (curAns?.answer !== null && curAns?.answer !== undefined ? curAns.answer.toString() : '');
+      if (digit === '.') {
+        if (currentProblem.category === 'decimal' && !prevRaw.includes('.')) {
+          const nextRaw = prevRaw === '' ? '0.' : prevRaw + '.';
+          setUserAnswer(currentProblem.id, parseFloat(nextRaw) || 0, undefined, undefined, nextRaw);
+        }
+      } else {
+        const nextRaw = prevRaw + digit;
+        if (currentProblem.category === 'decimal') {
+          const nextAns = parseFloat(nextRaw);
+          setUserAnswer(currentProblem.id, isNaN(nextAns) ? null : nextAns, undefined, undefined, nextRaw);
+        } else {
+          const nextAns = parseInt(nextRaw, 10);
+          setUserAnswer(currentProblem.id, isNaN(nextAns) ? null : nextAns, undefined, undefined, nextRaw);
+        }
+      }
     }
   };
 
   const handleKeypadBackspace = () => {
     if (!currentProblem) return;
     const curAns = useWorksheetStore.getState().userAnswers[currentProblem.id];
+
+    if (currentProblem.category === 'fraction') {
+      const curFrac: FractionValue = curAns?.fractionAnswer || { numerator: 0, denominator: 1 };
+      if (activeInputType === 'whole') {
+        const prevStr = curFrac.whole !== undefined && curFrac.whole !== null ? curFrac.whole.toString() : '';
+        if (prevStr.length <= 1) {
+          setUserAnswer(currentProblem.id, undefined, undefined, { ...curFrac, whole: undefined });
+        } else {
+          const nextVal = parseInt(prevStr.slice(0, -1), 10);
+          setUserAnswer(currentProblem.id, undefined, undefined, { ...curFrac, whole: isNaN(nextVal) ? undefined : nextVal });
+        }
+      } else if (activeInputType === 'num') {
+        const prevStr = curFrac.numerator ? curFrac.numerator.toString() : '';
+        if (prevStr.length <= 1) {
+          setUserAnswer(currentProblem.id, undefined, undefined, { ...curFrac, numerator: 0 });
+        } else {
+          const nextVal = parseInt(prevStr.slice(0, -1), 10);
+          setUserAnswer(currentProblem.id, undefined, undefined, { ...curFrac, numerator: isNaN(nextVal) ? 0 : nextVal });
+        }
+      } else if (activeInputType === 'den') {
+        const prevStr = curFrac.denominator ? curFrac.denominator.toString() : '';
+        if (prevStr.length <= 1) {
+          setUserAnswer(currentProblem.id, undefined, undefined, { ...curFrac, denominator: 1 });
+        } else {
+          const nextVal = parseInt(prevStr.slice(0, -1), 10);
+          setUserAnswer(currentProblem.id, undefined, undefined, { ...curFrac, denominator: isNaN(nextVal) || nextVal === 0 ? 1 : nextVal });
+        }
+      }
+      return;
+    }
 
     if (activeInputType === 'remainder' && isDivisionWithRemainder) {
       const prevRem =
@@ -103,25 +176,32 @@ export default function PracticePage() {
         setUserAnswer(currentProblem.id, undefined, isNaN(nextRem) ? null : nextRem);
       }
     } else {
-      const prevAns =
-        curAns?.answer !== null && curAns?.answer !== undefined
-          ? curAns.answer.toString()
-          : '';
-      if (prevAns.length <= 1) {
-        setUserAnswer(currentProblem.id, null, undefined);
+      const prevRaw = curAns?.rawInput ?? (curAns?.answer !== null && curAns?.answer !== undefined ? curAns.answer.toString() : '');
+      if (prevRaw.length <= 1) {
+        setUserAnswer(currentProblem.id, null, undefined, undefined, '');
       } else {
-        const nextAns = parseInt(prevAns.slice(0, -1), 10);
-        setUserAnswer(currentProblem.id, isNaN(nextAns) ? null : nextAns, undefined);
+        const nextRaw = prevRaw.slice(0, -1);
+        if (currentProblem.category === 'decimal') {
+          const nextAns = parseFloat(nextRaw);
+          setUserAnswer(currentProblem.id, isNaN(nextAns) ? null : nextAns, undefined, undefined, nextRaw);
+        } else {
+          const nextAns = parseInt(nextRaw, 10);
+          setUserAnswer(currentProblem.id, isNaN(nextAns) ? null : nextAns, undefined, undefined, nextRaw);
+        }
       }
     }
   };
 
   const handleKeypadClear = () => {
     if (!currentProblem) return;
+    if (currentProblem.category === 'fraction') {
+      setUserAnswer(currentProblem.id, undefined, undefined, { numerator: 0, denominator: 1 });
+      return;
+    }
     if (activeInputType === 'remainder' && isDivisionWithRemainder) {
       setUserAnswer(currentProblem.id, undefined, null);
     } else {
-      setUserAnswer(currentProblem.id, null, undefined);
+      setUserAnswer(currentProblem.id, null, undefined, undefined, '');
     }
   };
 
@@ -130,14 +210,25 @@ export default function PracticePage() {
     const curAns = useWorksheetStore.getState().userAnswers[currentProblem.id];
 
     // 현재 문제 입력값 확인
-    if (curAns?.answer === null || curAns?.answer === undefined) {
-      alert('답을 입력해 주세요.');
-      return;
+    if (currentProblem.category === 'fraction') {
+      if (
+        !curAns?.fractionAnswer ||
+        curAns.fractionAnswer.numerator === undefined ||
+        !curAns.fractionAnswer.denominator
+      ) {
+        alert('분수 답(분자와 분모)을 입력해 주세요.');
+        return;
+      }
+    } else {
+      if (curAns?.answer === null || curAns?.answer === undefined) {
+        alert('답을 입력해 주세요.');
+        return;
+      }
     }
 
     if (
       isDivisionWithRemainder &&
-      (curAns.remainder === null || curAns.remainder === undefined)
+      (curAns?.remainder === null || curAns?.remainder === undefined)
     ) {
       alert('나머지를 입력해 주세요.');
       return;
@@ -157,13 +248,23 @@ export default function PracticePage() {
         setFeedback(null);
         if (currentIndex < problems.length - 1) {
           nextProblem();
-          setActiveInputType('answer');
+          if (problems[currentIndex + 1]?.category === 'fraction') {
+            setActiveInputType('num');
+            setActiveFractionPart('num');
+          } else {
+            setActiveInputType('answer');
+          }
         }
       }, 700);
     } else {
       if (currentIndex < problems.length - 1) {
         nextProblem();
-        setActiveInputType('answer');
+        if (problems[currentIndex + 1]?.category === 'fraction') {
+          setActiveInputType('num');
+          setActiveFractionPart('num');
+        } else {
+          setActiveInputType('answer');
+        }
       }
     }
   };
@@ -171,16 +272,21 @@ export default function PracticePage() {
   const handleNextProblem = () => {
     const curAns = useWorksheetStore.getState().userAnswers[currentProblem.id];
     const hasAnswer =
-      curAns?.answer !== null &&
-      curAns?.answer !== undefined &&
-      !isNaN(Number(curAns?.answer));
+      currentProblem.category === 'fraction'
+        ? Boolean(curAns?.fractionAnswer && curAns.fractionAnswer.numerator !== undefined && curAns.fractionAnswer.denominator)
+        : curAns?.answer !== null && curAns?.answer !== undefined && !isNaN(Number(curAns?.answer));
 
     if (isImmediateGrading && hasAnswer && !curAns?.submittedAt) {
       handleSubmit();
     } else {
       if (currentIndex < problems.length - 1) {
         nextProblem();
-        setActiveInputType('answer');
+        if (problems[currentIndex + 1]?.category === 'fraction') {
+          setActiveInputType('num');
+          setActiveFractionPart('num');
+        } else {
+          setActiveInputType('answer');
+        }
       }
     }
   };
@@ -189,6 +295,9 @@ export default function PracticePage() {
     const state = useWorksheetStore.getState();
     const unanswered = state.problems.filter((p) => {
       const a = state.userAnswers[p.id];
+      if (p.category === 'fraction') {
+        return !a?.fractionAnswer || a.fractionAnswer.numerator === undefined || !a.fractionAnswer.denominator;
+      }
       return a?.answer === null || a?.answer === undefined;
     });
 
@@ -221,7 +330,9 @@ export default function PracticePage() {
   };
 
   const answeredCount = Object.values(userAnswers).filter(
-    (a) => a.answer !== null && a.answer !== undefined
+    (a) =>
+      (a.answer !== null && a.answer !== undefined) ||
+      (a.fractionAnswer && a.fractionAnswer.numerator !== undefined && a.fractionAnswer.denominator)
   ).length;
   const isLastProblem = currentIndex === problems.length - 1;
 
@@ -230,13 +341,16 @@ export default function PracticePage() {
   let liveIncorrectCount = 0;
   problems.forEach((p) => {
     const a = userAnswers[p.id];
-    if (a && a.answer !== null && a.answer !== undefined && !isNaN(Number(a.answer))) {
-      let ok = Number(a.answer) === p.answer;
-      if (p.operation === 'division' && p.remainder !== undefined) {
-        ok = ok && Number(a.remainder || 0) === p.remainder;
+    const hasAnswer =
+      p.category === 'fraction'
+        ? Boolean(a?.fractionAnswer && a.fractionAnswer.numerator !== undefined && a.fractionAnswer.denominator)
+        : a?.answer !== null && a?.answer !== undefined && !isNaN(Number(a.answer));
+    if (hasAnswer) {
+      if (evaluateProblemAnswer(p, a)) {
+        liveCorrectCount++;
+      } else {
+        liveIncorrectCount++;
       }
-      if (ok) liveCorrectCount++;
-      else liveIncorrectCount++;
     }
   });
   const totalCount = problems.length;
@@ -372,46 +486,89 @@ export default function PracticePage() {
 
             {/* 수식 렌더링 */}
             <div className="py-1 sm:py-6 flex justify-center items-center">
-              {currentProblem.displayFormat === 'vertical' ? (
-                <div className="scale-105 sm:scale-135 transform transition-transform my-0.5 sm:my-2">
-                  <VerticalProblem
-                    key={currentProblem.id}
-                    problem={currentProblem}
-                    userAnswer={currentAnswer?.answer}
-                    onFocus={() => setActiveInputType('answer')}
-                    onSubmit={handleSubmit}
-                    virtualKeyboard={true}
-                    onAnswerChange={(val) =>
-                      setUserAnswer(currentProblem.id, val, undefined)
-                    }
-                  />
-                </div>
-              ) : (
-                <div className="scale-105 sm:scale-125 transform transition-transform my-0.5 sm:my-2">
-                  <HorizontalProblem
-                    key={currentProblem.id}
-                    problem={currentProblem}
-                    userAnswer={currentAnswer?.answer}
-                    userRemainder={currentAnswer?.remainder}
-                    onFocusAnswer={() => setActiveInputType('answer')}
-                    onFocusRemainder={() => setActiveInputType('remainder')}
-                    onSubmit={handleSubmit}
-                    virtualKeyboard={true}
-                    onAnswerChange={(val) =>
-                      setUserAnswer(currentProblem.id, val, undefined)
-                    }
-                    onRemainderChange={(val) =>
-                      setUserAnswer(currentProblem.id, undefined, val)
-                    }
-                  />
-                </div>
-              )}
+              <div className="scale-105 sm:scale-125 transform transition-transform my-0.5 sm:my-2">
+                <UniversalProblem
+                  key={currentProblem.id}
+                  problem={currentProblem}
+                  userAnswer={currentAnswer?.answer}
+                  userRemainder={currentAnswer?.remainder}
+                  userFraction={currentAnswer?.fractionAnswer}
+                  rawInput={currentAnswer?.rawInput}
+                  activeFractionPart={activeFractionPart}
+                  onFocusFractionPart={(part) => {
+                    setActiveInputType(part);
+                    setActiveFractionPart(part);
+                  }}
+                  onFocusAnswer={() => setActiveInputType('answer')}
+                  onFocusRemainder={() => setActiveInputType('remainder')}
+                  onSubmit={handleSubmit}
+                  virtualKeyboard={true}
+                  onAnswerChange={(val) =>
+                    setUserAnswer(currentProblem.id, val, undefined, undefined)
+                  }
+                  onRemainderChange={(val) =>
+                    setUserAnswer(currentProblem.id, undefined, val, undefined)
+                  }
+                  onFractionChange={(val) =>
+                    setUserAnswer(currentProblem.id, undefined, undefined, val)
+                  }
+                />
+              </div>
             </div>
+
+            {/* 분수의 경우 자연수/분자/분모 입력 탭 선택 버튼 */}
+            {currentProblem.category === 'fraction' && (
+              <div className="flex justify-center gap-2 mt-1 sm:mt-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveInputType('whole');
+                    setActiveFractionPart('whole');
+                  }}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                    activeInputType === 'whole'
+                      ? 'bg-emerald-600 text-white shadow-xs'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  자연수(대분수)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveInputType('num');
+                    setActiveFractionPart('num');
+                  }}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                    activeInputType === 'num'
+                      ? 'bg-emerald-600 text-white shadow-xs'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  분자 입력
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveInputType('den');
+                    setActiveFractionPart('den');
+                  }}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                    activeInputType === 'den'
+                      ? 'bg-emerald-600 text-white shadow-xs'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  분모 입력
+                </button>
+              </div>
+            )}
 
             {/* 나눗셈의 경우 몫/나머지 입력 탭 선택 버튼 */}
             {currentProblem.operation === 'division' && currentProblem.remainder !== undefined && (
               <div className="flex justify-center gap-2 mt-1 sm:mt-3">
                 <button
+                  type="button"
                   onClick={() => setActiveInputType('answer')}
                   className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
                     activeInputType === 'answer'
@@ -422,6 +579,7 @@ export default function PracticePage() {
                   몫 입력 중
                 </button>
                 <button
+                  type="button"
                   onClick={() => setActiveInputType('remainder')}
                   className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
                     activeInputType === 'remainder'
@@ -474,6 +632,7 @@ export default function PracticePage() {
                 canPrev={currentIndex > 0}
                 canNext={currentIndex < problems.length - 1}
                 allowNegative={currentRule.allowNegative}
+                allowDecimal={currentProblem.category === 'decimal'}
               />
 
               {/* 모바일 전용 완료 버튼 (키패드 바로 아래 배치) */}
@@ -495,18 +654,11 @@ export default function PracticePage() {
             {problems.map((problem, idx) => {
               const ans = userAnswers[problem.id];
               const hasAnswer =
-                ans?.answer !== null &&
-                ans?.answer !== undefined &&
-                !isNaN(Number(ans?.answer));
+                problem.category === 'fraction'
+                  ? Boolean(ans?.fractionAnswer && ans.fractionAnswer.numerator !== undefined && ans.fractionAnswer.denominator)
+                  : ans?.answer !== null && ans?.answer !== undefined && !isNaN(Number(ans?.answer));
 
-              let isProbCorrect: boolean | null = null;
-              if (hasAnswer) {
-                let ok = Number(ans.answer) === problem.answer;
-                if (problem.operation === 'division' && problem.remainder !== undefined) {
-                  ok = ok && Number(ans.remainder || 0) === problem.remainder;
-                }
-                isProbCorrect = ok;
-              }
+              const isProbCorrect = hasAnswer ? evaluateProblemAnswer(problem, ans) : null;
 
               const cardBorderClass =
                 isImmediateGrading && hasAnswer
@@ -540,51 +692,39 @@ export default function PracticePage() {
                   </div>
 
                   <div className="flex justify-center items-center py-3">
-                    {problem.displayFormat === 'vertical' ? (
-                      <VerticalProblem
-                        key={problem.id}
-                        problem={problem}
-                        userAnswer={ans?.answer}
-                        onSubmit={() => {
-                          if (isImmediateGrading && soundEnabled && hasAnswer) {
-                            if (isProbCorrect) playCorrectSound();
-                            else playIncorrectSound();
-                          }
-                        }}
-                        onAnswerChange={(val) => {
-                          setUserAnswer(problem.id, val, undefined);
-                          if (isImmediateGrading && soundEnabled && val !== null && !isNaN(val)) {
-                            if (Number(val) === problem.answer) {
-                              playCorrectSound();
-                            }
-                          }
-                        }}
-                      />
-                    ) : (
-                      <HorizontalProblem
-                        key={problem.id}
-                        problem={problem}
-                        userAnswer={ans?.answer}
-                        userRemainder={ans?.remainder}
-                        onSubmit={() => {
-                          if (isImmediateGrading && soundEnabled && hasAnswer) {
-                            if (isProbCorrect) playCorrectSound();
-                            else playIncorrectSound();
-                          }
-                        }}
-                        onAnswerChange={(val) => {
-                          setUserAnswer(problem.id, val, undefined);
-                          if (isImmediateGrading && soundEnabled && val !== null && !isNaN(val)) {
-                            if (Number(val) === problem.answer) {
-                              playCorrectSound();
-                            }
-                          }
-                        }}
-                        onRemainderChange={(val) =>
-                          setUserAnswer(problem.id, undefined, val)
+                    <UniversalProblem
+                      key={problem.id}
+                      problem={problem}
+                      userAnswer={ans?.answer}
+                      userRemainder={ans?.remainder}
+                      userFraction={ans?.fractionAnswer}
+                      rawInput={ans?.rawInput}
+                      onSubmit={() => {
+                        if (isImmediateGrading && soundEnabled && hasAnswer) {
+                          if (isProbCorrect) playCorrectSound();
+                          else playIncorrectSound();
                         }
-                      />
-                    )}
+                      }}
+                      onAnswerChange={(val) => {
+                        setUserAnswer(problem.id, val, undefined, undefined);
+                        if (isImmediateGrading && soundEnabled && val !== null && !isNaN(val)) {
+                          if (evaluateProblemAnswer(problem, { ...ans, problemId: problem.id, answer: val })) {
+                            playCorrectSound();
+                          }
+                        }
+                      }}
+                      onRemainderChange={(val) => {
+                        setUserAnswer(problem.id, undefined, val, undefined);
+                      }}
+                      onFractionChange={(val) => {
+                        setUserAnswer(problem.id, undefined, undefined, val);
+                        if (isImmediateGrading && soundEnabled && val) {
+                          if (evaluateProblemAnswer(problem, { ...ans, problemId: problem.id, answer: null, fractionAnswer: val })) {
+                            playCorrectSound();
+                          }
+                        }
+                      }}
+                    />
                   </div>
                 </div>
               );

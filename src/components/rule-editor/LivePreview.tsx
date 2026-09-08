@@ -3,8 +3,7 @@
 import React, { useMemo } from 'react';
 import { WorksheetRule } from '@/domain/math/types';
 import { generateWorksheet } from '@/domain/math/generators/engine';
-import { VerticalProblem } from '../problem-view/VerticalProblem';
-import { HorizontalProblem } from '../problem-view/HorizontalProblem';
+import { UniversalProblem } from '../problem-view/UniversalProblem';
 import { Eye, AlertCircle, RefreshCw } from 'lucide-react';
 
 interface LivePreviewProps {
@@ -68,19 +67,11 @@ export function LivePreview({ rule, onRefresh }: LivePreviewProps) {
                 </div>
 
                 <div className="flex justify-center py-2">
-                  {problem.displayFormat === 'vertical' ? (
-                    <VerticalProblem
-                      problem={problem}
-                      isReadOnly={true}
-                      showExampleAnswer={problem.isExample}
-                    />
-                  ) : (
-                    <HorizontalProblem
-                      problem={problem}
-                      isReadOnly={true}
-                      showExampleAnswer={problem.isExample}
-                    />
-                  )}
+                  <UniversalProblem
+                    problem={problem}
+                    isReadOnly={true}
+                    showExampleAnswer={problem.isExample}
+                  />
                 </div>
               </div>
             ))}

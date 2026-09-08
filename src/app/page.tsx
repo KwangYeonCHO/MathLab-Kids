@@ -42,6 +42,23 @@ export default function HomePage() {
     router.push('/practice');
   };
 
+  const [selectedGrade, setSelectedGrade] = useState<string>('all');
+
+  const gradeTabs = [
+    { id: 'all', label: '전체 (24)' },
+    { id: '초1', label: '1학년' },
+    { id: '초2', label: '2학년' },
+    { id: '초3', label: '3학년' },
+    { id: '초4', label: '4학년' },
+    { id: '초5', label: '5학년 (8)' },
+    { id: '초6', label: '6학년 (8)' },
+  ];
+
+  const filteredPresets =
+    selectedGrade === 'all'
+      ? GRADE_PRESETS
+      : GRADE_PRESETS.filter((p) => p.gradeShort === selectedGrade);
+
   return (
     <div className="space-y-10 pb-10">
       {/* 히어로 섹션 */}
@@ -138,7 +155,7 @@ export default function HomePage() {
 
       {/* 학년별 공식 추천 바로가기 */}
       <section className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-sm space-y-5">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h2 className="text-lg sm:text-xl font-bold text-slate-900">학년별 추천 연산 바로 시작</h2>
             <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
@@ -147,15 +164,33 @@ export default function HomePage() {
           </div>
           <Link
             href="/create"
-            className="text-xs sm:text-sm font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-1"
+            className="text-xs sm:text-sm font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-1 self-start sm:self-auto"
           >
             <span>전체 규칙 보기</span>
             <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
 
+        {/* 학년 필터 탭 */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+          {gradeTabs.map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setSelectedGrade(tab.id)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all ${
+                selectedGrade === tab.id
+                  ? 'bg-emerald-600 text-white shadow-xs'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
-          {GRADE_PRESETS.map((preset) => (
+          {filteredPresets.map((preset) => (
             <div
               key={preset.id}
               className="p-4 bg-slate-50 rounded-xl border border-slate-200 hover:border-emerald-400 hover:bg-emerald-50/30 transition-all flex flex-col justify-between"

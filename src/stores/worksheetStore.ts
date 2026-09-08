@@ -4,6 +4,8 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { WorksheetRule, Problem, UserAnswer, SessionResult } from '../domain/math/types';
+import { FractionValue, isEquivalent, isSimplestForm } from '../domain/math/core/fraction';
+import { areDecimalsEqual } from '../domain/math/core/decimal';
 import { GRADE_PRESETS } from '../domain/math/presets';
 import { generateWorksheet } from '../domain/math/generators/engine';
 import { resolveRuleTitle } from '../domain/math/ruleTitle';
@@ -39,7 +41,13 @@ interface WorksheetState {
   resetRuleToDefault: () => void;
   loadPreset: (presetId: string) => void;
   generateNewProblems: () => boolean;
-  setUserAnswer: (problemId: string, answer?: number | null, remainder?: number | null) => void;
+  setUserAnswer: (
+    problemId: string,
+    answer?: number | null,
+    remainder?: number | null,
+    fractionAnswer?: FractionValue | null,
+    rawInput?: string
+  ) => void;
   submitCurrentAnswer: () => boolean; // 정답 여부 반환
   nextProblem: () => void;
   prevProblem: () => void;
@@ -59,6 +67,39 @@ interface WorksheetState {
   ) => void;
 }
 
+export function evaluateProblemAnswer(prob: Problem, userAns?: UserAnswer): boolean {
+  if (!userAns) return false;
+
+  if (prob.category === 'fraction') {
+    if (!userAns.fractionAnswer || !prob.fractionAnswer) return false;
+    return isEquivalent(userAns.fractionAnswer, prob.fractionAnswer) && isSimplestForm(userAns.fractionAnswer);
+  }
+
+  if (prob.category === 'decimal') {
+    if (userAns.answer === null || userAns.answer === undefined || isNaN(Number(userAns.answer))) return false;
+    let ok = areDecimalsEqual(Number(userAns.answer), prob.answer);
+    if (prob.remainder !== undefined) {
+      const userRem =
+        userAns.remainder !== null && userAns.remainder !== undefined
+          ? Number(userAns.remainder)
+          : 0;
+      ok = ok && areDecimalsEqual(userRem, prob.remainder);
+    }
+    return ok;
+  }
+
+  if (userAns.answer === null || userAns.answer === undefined || isNaN(Number(userAns.answer))) return false;
+  let ok = Number(userAns.answer) === prob.answer;
+  if (prob.operation === 'division' && prob.remainder !== undefined) {
+    const userRem =
+      userAns.remainder !== null && userAns.remainder !== undefined && !isNaN(Number(userAns.remainder))
+        ? Number(userAns.remainder)
+        : 0;
+    ok = ok && userRem === prob.remainder;
+  }
+  return ok;
+}
+
 const defaultRule = GRADE_PRESETS[1].rule; // 2학년 받아올림 덧셈 기본
 
 export const useWorksheetStore = create<WorksheetState>()(
@@ -76,24 +117,23 @@ export const useWorksheetStore = create<WorksheetState>()(
   lastResult: null,
   soundEnabled: true,
   printColumns: 'auto',
-  printIncludeAnswerKey: false,
-  printIsCompact: true,
+  printIncludeAnswerKey: true,
+  printIsCompact: false,
   printSheetCount: 1,
   printFontScale: 1.0,
 
   setPrintColumns: (columns) => set({ printColumns: columns }),
   setPrintIncludeAnswerKey: (include) => set({ printIncludeAnswerKey: include }),
   setPrintIsCompact: (compact) => set({ printIsCompact: compact }),
-  setPrintSheetCount: (count) => set({ printSheetCount: Math.max(1, Math.min(20, count)) }),
-  setPrintFontScale: (scale) => set({ printFontScale: Math.round(Math.max(0.7, Math.min(1.5, scale)) * 100) / 100 }),
+  setPrintSheetCount: (count) => set({ printSheetCount: count }),
+  setPrintFontScale: (scale) => set({ printFontScale: Math.max(0.7, Math.min(1.5, scale)) }),
 
   setRule: (ruleOrUpdater) => {
-    set((state) => {
-      const nextRuleRaw = typeof ruleOrUpdater === 'function' ? ruleOrUpdater(state.currentRule) : { ...state.currentRule, ...ruleOrUpdater };
-      const nextTitle = resolveRuleTitle(nextRuleRaw);
-      const nextRule = { ...nextRuleRaw, title: nextTitle };
-      return { currentRule: nextRule };
-    });
+    const nextRule =
+      typeof ruleOrUpdater === 'function'
+        ? ruleOrUpdater(get().currentRule)
+        : { ...get().currentRule, ...ruleOrUpdater };
+    set({ currentRule: nextRule });
     get().generateNewProblems();
   },
 
@@ -129,7 +169,7 @@ export const useWorksheetStore = create<WorksheetState>()(
     }
   },
 
-  setUserAnswer: (problemId, answer, remainder) => {
+  setUserAnswer: (problemId, answer, remainder, fractionAnswer, rawInput) => {
     const state = get();
     const currentAns = state.userAnswers[problemId] || {
       problemId,
@@ -141,6 +181,8 @@ export const useWorksheetStore = create<WorksheetState>()(
       ...currentAns,
       answer: answer !== undefined ? answer : currentAns.answer,
       remainder: remainder !== undefined ? remainder : currentAns.remainder,
+      fractionAnswer: fractionAnswer !== undefined ? fractionAnswer : currentAns.fractionAnswer,
+      rawInput: rawInput !== undefined ? rawInput : currentAns.rawInput,
     };
 
     const nextAnswers = {
@@ -160,14 +202,10 @@ export const useWorksheetStore = create<WorksheetState>()(
     if (!currentProb) return false;
 
     const userAns = state.userAnswers[currentProb.id];
-    if (!userAns || userAns.answer === null || userAns.answer === undefined || isNaN(Number(userAns.answer))) return false;
+    if (!userAns) return false;
 
-    // 정답 판정
-    let isCorrect = Number(userAns.answer) === currentProb.answer;
-    if (currentProb.operation === 'division' && currentProb.remainder !== undefined) {
-      const userRem = userAns.remainder !== null && userAns.remainder !== undefined && !isNaN(Number(userAns.remainder)) ? Number(userAns.remainder) : 0;
-      isCorrect = isCorrect && userRem === currentProb.remainder;
-    }
+    // 정답 판정 (통합 평가)
+    const isCorrect = evaluateProblemAnswer(currentProb, userAns);
 
     const timeSpent = Date.now() - state.problemStartTime;
 
@@ -248,24 +286,7 @@ export const useWorksheetStore = create<WorksheetState>()(
 
     state.problems.forEach((prob) => {
       const userAns = state.userAnswers[prob.id];
-      const ansVal = userAns?.answer;
-      const remVal = userAns?.remainder;
-
-      const hasAnswer =
-        ansVal !== null &&
-        ansVal !== undefined &&
-        !isNaN(Number(ansVal)) &&
-        String(ansVal).trim() !== '';
-      let isCorrect = hasAnswer && Number(ansVal) === prob.answer;
-      if (prob.operation === 'division' && prob.remainder !== undefined) {
-        const hasRem =
-          remVal !== null &&
-          remVal !== undefined &&
-          !isNaN(Number(remVal)) &&
-          String(remVal).trim() !== '';
-        const userRem = hasRem ? Number(remVal) : 0;
-        isCorrect = isCorrect && userRem === prob.remainder;
-      }
+      const isCorrect = evaluateProblemAnswer(prob, userAns);
 
       if (isCorrect) {
         correctCount++;
@@ -275,14 +296,10 @@ export const useWorksheetStore = create<WorksheetState>()(
 
       finalizedAnswers[prob.id] = {
         problemId: prob.id,
-        answer: hasAnswer ? Number(ansVal) : null,
-        remainder:
-          remVal !== null &&
-          remVal !== undefined &&
-          !isNaN(Number(remVal)) &&
-          String(remVal).trim() !== ''
-            ? Number(remVal)
-            : null,
+        answer: userAns?.answer ?? null,
+        remainder: userAns?.remainder ?? null,
+        fractionAnswer: userAns?.fractionAnswer ?? null,
+        rawInput: userAns?.rawInput,
         isCorrect,
         timeSpentMs: userAns?.timeSpentMs ?? 0,
         submittedAt: userAns?.submittedAt ?? new Date().toISOString(),
