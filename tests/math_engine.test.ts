@@ -255,5 +255,17 @@ describe('10,000회 대량 무결성 스트레스 테스트 (매뉴얼 26.2)', (
       }
       expect(collisions).toEqual([]);
     });
+
+    it('모든 학년의 프리셋 목록에서 1학기 연산이 2학기 연산보다 항상 먼저 정렬되어 있어야 함 (학기 혼합 방지)', () => {
+      const grades = ['초1', '초2', '초3', '초4', '초5', '초6'];
+      grades.forEach((gradeShort) => {
+        const presetsInGrade = GRADE_PRESETS.filter((p) => p.gradeShort === gradeShort);
+        const semesters = presetsInGrade.map((p) => p.semester);
+        // semesters 배열은 1이 먼저 나오고 그 후 2가 나와야 함 (오름차순 보장)
+        for (let k = 0; k < semesters.length - 1; k++) {
+          expect(semesters[k]).toBeLessThanOrEqual(semesters[k + 1]);
+        }
+      });
+    });
   });
 });
