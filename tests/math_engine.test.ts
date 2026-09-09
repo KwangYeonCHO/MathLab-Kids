@@ -204,11 +204,14 @@ describe('10,000회 대량 무결성 스트레스 테스트 (매뉴얼 26.2)', (
     expect(violationCount).toBe(0);
   });
 
-  describe('학년별 프리셋(GRADE_PRESETS) 전체 유효성 검증', () => {
-    it('총 25개의 공식 프리셋이 모두 20문항을 오류 없이 정상 생성해야 함', () => {
-      expect(GRADE_PRESETS.length).toBe(25);
+  describe('학년·학기별 프리셋(GRADE_PRESETS) 2022 개정 교육과정 전체 유효성 검증', () => {
+    it('총 29개의 공식 프리셋이 모두 20문항을 오류 없이 정상 생성해야 함', () => {
+      expect(GRADE_PRESETS.length).toBe(29);
 
       GRADE_PRESETS.forEach((preset) => {
+        expect([1, 2]).toContain(preset.semester);
+        expect(preset.semesterLabel).toMatch(new RegExp(`^${preset.gradeShort}\\([12]학기\\)$`));
+
         const result = generateWorksheet(preset.rule);
         expect(result.success).toBe(true);
         expect(result.problems.length).toBe(preset.rule.count);

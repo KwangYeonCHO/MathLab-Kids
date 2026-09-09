@@ -1,22 +1,28 @@
 /**
- * 대한민국 2022 개정 초등 교육과정 기준 학년별 빠른 설정 (Presets)
+ * 대한민국 2022 개정 초등 수학 교육과정 기준 학년·학기별 빠른 설정 (Presets)
+ * 초등학교 1학년부터 6학년까지 1학기와 2학기 총 12개 학기 체계로 정밀 구성
  */
 import { WorksheetRule } from './types';
 
 export interface PresetItem {
   id: string;
   grade: string; // "초등학교 1학년", "초등학교 2학년" 등
-  gradeShort: string; // "초1", "초2"
-  title: string; // "2학년 받아올림 덧셈"
+  gradeShort: string; // "초1", "초2" 등
+  semester: 1 | 2; // 1 | 2 (학기)
+  semesterLabel: string; // "초1(1학기)", "초1(2학기)" 등 뱃지 표기
+  title: string;
   description: string;
   rule: WorksheetRule;
 }
 
 export const GRADE_PRESETS: PresetItem[] = [
+  // ================= 1학년 (초1) =================
   {
     id: 'g1-add-sub-basic',
     grade: '초등학교 1학년',
     gradeShort: '초1',
+    semester: 1,
+    semesterLabel: '초1(1학기)',
     title: '1학년 한 자리 수 덧셈과 뺄셈',
     description: '받아올림과 받아내림 없이 10 이하 및 한 자리 수의 기본 덧셈·뺄셈을 연습합니다.',
     rule: {
@@ -40,6 +46,8 @@ export const GRADE_PRESETS: PresetItem[] = [
     id: 'g1-add-sub-no-carry-vertical',
     grade: '초등학교 1학년',
     gradeShort: '초1',
+    semester: 2,
+    semesterLabel: '초1(2학기)',
     title: '1학년 (한/두 자리 수) 덧셈과 뺄셈',
     description: '받아올림과 받아내림 없이 세로셈으로 한·두 자리 수의 덧셈과 뺄셈을 자릿수에 맞추어 계산합니다.',
     rule: {
@@ -59,10 +67,14 @@ export const GRADE_PRESETS: PresetItem[] = [
       showFirstExample: true,
     },
   },
+
+  // ================= 2학년 (초2) =================
   {
     id: 'g2-add-carry-once',
     grade: '초등학교 2학년',
     gradeShort: '초2',
+    semester: 1,
+    semesterLabel: '초2(1학기)',
     title: '2학년 받아올림이 있는 두 자리 수 덧셈',
     description: '일의 자리에서 십의 자리로 받아올림이 정확히 한 번 발생하는 두 자리 수 덧셈입니다.',
     rule: {
@@ -86,6 +98,8 @@ export const GRADE_PRESETS: PresetItem[] = [
     id: 'g2-sub-borrow-once',
     grade: '초등학교 2학년',
     gradeShort: '초2',
+    semester: 1,
+    semesterLabel: '초2(1학기)',
     title: '2학년 받아내림이 있는 두 자리 수 뺄셈',
     description: '십의 자리에서 일의 자리로 받아내림이 한 번 필요한 두 자리 수 뺄셈을 집중 연습합니다.',
     rule: {
@@ -109,6 +123,8 @@ export const GRADE_PRESETS: PresetItem[] = [
     id: 'g2-multiplication-table',
     grade: '초등학교 2학년',
     gradeShort: '초2',
+    semester: 2,
+    semesterLabel: '초2(2학기)',
     title: '2학년 곱셈구구 (2단~9단)',
     description: '초등 2학년 2학기 핵심인 2단부터 9단까지의 곱셈구구를 고르게 익힙니다.',
     rule: {
@@ -135,9 +151,38 @@ export const GRADE_PRESETS: PresetItem[] = [
     },
   },
   {
+    id: 'g2-add-sub-mastery',
+    grade: '초등학교 2학년',
+    gradeShort: '초2',
+    semester: 2,
+    semesterLabel: '초2(2학기)',
+    title: '2학년 두 자리 수 덧셈과 뺄셈 완성',
+    description: '받아올림과 받아내림이 있는 두 자리 수의 덧셈과 뺄셈을 세로셈으로 종합 계산합니다.',
+    rule: {
+      schemaVersion: 1,
+      title: '2학년 두 자리 수 덧셈과 뺄셈 완성',
+      operations: ['addition', 'subtraction'],
+      count: 20,
+      operandA: { digits: [2], allowZeroEnding: true },
+      operandB: { digits: [2], allowZeroEnding: true },
+      carryCondition: 'once',
+      borrowCondition: 'once',
+      divisionCondition: 'none',
+      allowNegative: false,
+      allowZero: false,
+      uniqueMode: 'exact',
+      displayFormat: 'vertical',
+      showFirstExample: true,
+    },
+  },
+
+  // ================= 3학년 (초3) =================
+  {
     id: 'g3-add-sub-three-digits',
     grade: '초등학교 3학년',
     gradeShort: '초3',
+    semester: 1,
+    semesterLabel: '초3(1학기)',
     title: '3학년 세 자리 수 덧셈과 뺄셈',
     description: '받아올림과 받아내림이 있는 세 자리 수의 덧셈과 뺄셈을 세로셈으로 정확하게 계산합니다.',
     rule: {
@@ -158,9 +203,36 @@ export const GRADE_PRESETS: PresetItem[] = [
     },
   },
   {
+    id: 'g3-multiplication-basic',
+    grade: '초등학교 3학년',
+    gradeShort: '초3',
+    semester: 1,
+    semesterLabel: '초3(1학기)',
+    title: '3학년 (두 자리 수) × (한 자리 수) 곱셈',
+    description: '두 자리 수와 한 자리 수의 곱셈 원리를 익히고 세로셈으로 바르게 계산합니다.',
+    rule: {
+      schemaVersion: 1,
+      title: '3학년 (두 자리 수) × (한 자리 수) 곱셈',
+      operations: ['multiplication'],
+      count: 20,
+      operandA: { digits: [2], allowZeroEnding: true },
+      operandB: { digits: [1], allowZeroEnding: false },
+      carryCondition: 'any',
+      borrowCondition: 'any',
+      divisionCondition: 'none',
+      allowNegative: false,
+      allowZero: false,
+      uniqueMode: 'exact',
+      displayFormat: 'vertical',
+      showFirstExample: true,
+    },
+  },
+  {
     id: 'g3-division-exact',
     grade: '초등학교 3학년',
     gradeShort: '초3',
+    semester: 1,
+    semesterLabel: '초3(1학기)',
     title: '3학년 나머지가 없는 나눗셈',
     description: '두 자리 수를 한 자리 수로 나누어떨어지게 계산하는 기초 나눗셈입니다.',
     rule: {
@@ -184,6 +256,8 @@ export const GRADE_PRESETS: PresetItem[] = [
     id: 'g3-division-remainder',
     grade: '초등학교 3학년',
     gradeShort: '초3',
+    semester: 2,
+    semesterLabel: '초3(2학기)',
     title: '3학년 나머지가 있는 나눗셈',
     description: '두 자리 수 ÷ 한 자리 수에서 몫과 나머지를 함께 구하는 나눗셈 연습입니다.',
     rule: {
@@ -204,9 +278,38 @@ export const GRADE_PRESETS: PresetItem[] = [
     },
   },
   {
+    id: 'g3-multiplication-advanced',
+    grade: '초등학교 3학년',
+    gradeShort: '초3',
+    semester: 2,
+    semesterLabel: '초3(2학기)',
+    title: '3학년 (세 자리 수) × (한 자리 수) 곱셈',
+    description: '세 자리 수와 한 자리 수의 곱셈을 자릿값에 맞추어 세로셈으로 계산합니다.',
+    rule: {
+      schemaVersion: 1,
+      title: '3학년 (세 자리 수) × (한 자리 수) 곱셈',
+      operations: ['multiplication'],
+      count: 20,
+      operandA: { digits: [3], allowZeroEnding: true },
+      operandB: { digits: [1], allowZeroEnding: false },
+      carryCondition: 'any',
+      borrowCondition: 'any',
+      divisionCondition: 'none',
+      allowNegative: false,
+      allowZero: false,
+      uniqueMode: 'exact',
+      displayFormat: 'vertical',
+      showFirstExample: true,
+    },
+  },
+
+  // ================= 4학년 (초4) =================
+  {
     id: 'g4-multi-digits-mult-div',
     grade: '초등학교 4학년',
     gradeShort: '초4',
+    semester: 1,
+    semesterLabel: '초4(1학기)',
     title: '4학년 (두/세 자리 수) 곱셈과 나눗셈',
     description: '여러 자리 수 곱셈과 두 자리 수로 나누는 나눗셈 연산 실력을 다집니다.',
     rule: {
@@ -226,11 +329,68 @@ export const GRADE_PRESETS: PresetItem[] = [
       showFirstExample: true,
     },
   },
-  // ================= 5학년 (초5) 추천 연산 8종 =================
+  {
+    id: 'g4-frac-same-denom',
+    grade: '초등학교 4학년',
+    gradeShort: '초4',
+    semester: 2,
+    semesterLabel: '초4(2학기)',
+    title: '4학년 분모가 같은 분수의 덧셈과 뺄셈',
+    description: '분모가 같은 진분수와 대분수의 덧셈과 뺄셈을 기약분수로 계산합니다.',
+    rule: {
+      schemaVersion: 1,
+      title: '4학년 분모가 같은 분수의 덧셈과 뺄셈',
+      operations: ['addition'],
+      category: 'fraction',
+      count: 20,
+      operandA: { digits: [1] },
+      operandB: { digits: [1] },
+      carryCondition: 'any',
+      borrowCondition: 'any',
+      divisionCondition: 'none',
+      allowNegative: false,
+      allowZero: false,
+      uniqueMode: 'exact',
+      displayFormat: 'horizontal',
+      showFirstExample: true,
+      fractionRule: { type: 'addition', allowMixed: true, sameDenominator: true, maxDenominator: 12 },
+    },
+  },
+  {
+    id: 'g4-decimal-add-sub',
+    grade: '초등학교 4학년',
+    gradeShort: '초4',
+    semester: 2,
+    semesterLabel: '초4(2학기)',
+    title: '4학년 소수의 덧셈과 뺄셈',
+    description: '소수 한 자리 수와 두 자리 수의 덧셈과 뺄셈에서 자릿값을 맞추어 계산합니다.',
+    rule: {
+      schemaVersion: 1,
+      title: '4학년 소수의 덧셈과 뺄셈',
+      operations: ['addition', 'subtraction'],
+      category: 'decimal',
+      count: 20,
+      operandA: { digits: [1] },
+      operandB: { digits: [1] },
+      carryCondition: 'any',
+      borrowCondition: 'any',
+      divisionCondition: 'none',
+      allowNegative: false,
+      allowZero: false,
+      uniqueMode: 'exact',
+      displayFormat: 'horizontal',
+      showFirstExample: true,
+      decimalRule: { decimalPlacesA: [1, 2], decimalPlacesB: [1, 2] },
+    },
+  },
+
+  // ================= 5학년 (초5) =================
   {
     id: 'g5-mixed-ops-basic',
     grade: '초등학교 5학년',
     gradeShort: '초5',
+    semester: 1,
+    semesterLabel: '초5(1학기)',
     title: '5학년 덧셈·뺄셈·곱셈 혼합 계산',
     description: '사칙연산의 계산 순서(곱셈 우선)를 익히는 자연수 혼합 계산 연습입니다.',
     rule: {
@@ -256,6 +416,8 @@ export const GRADE_PRESETS: PresetItem[] = [
     id: 'g5-mixed-ops-paren',
     grade: '초등학교 5학년',
     gradeShort: '초5',
+    semester: 1,
+    semesterLabel: '초5(1학기)',
     title: '5학년 괄호가 있는 사칙 혼합 계산',
     description: '괄호 ( )가 포함된 식에서 계산 순서를 지켜 정확하게 해결합니다.',
     rule: {
@@ -281,6 +443,8 @@ export const GRADE_PRESETS: PresetItem[] = [
     id: 'g5-factors-gcd-lcm',
     grade: '초등학교 5학년',
     gradeShort: '초5',
+    semester: 1,
+    semesterLabel: '초5(1학기)',
     title: '5학년 최대공약수와 최소공배수',
     description: '두 수의 공약수, 공배수 성질을 활용하여 최대공약수와 최소공배수를 구합니다.',
     rule: {
@@ -303,34 +467,11 @@ export const GRADE_PRESETS: PresetItem[] = [
     },
   },
   {
-    id: 'g5-frac-same-denom',
-    grade: '초등학교 5학년',
-    gradeShort: '초5',
-    title: '5학년 분모가 같은 분수의 덧셈과 뺄셈',
-    description: '분모가 같은 진분수와 대분수의 덧셈과 뺄셈을 기약분수로 계산합니다.',
-    rule: {
-      schemaVersion: 1,
-      title: '5학년 분모가 같은 분수의 덧셈과 뺄셈',
-      operations: ['addition'],
-      category: 'fraction',
-      count: 20,
-      operandA: { digits: [1] },
-      operandB: { digits: [1] },
-      carryCondition: 'any',
-      borrowCondition: 'any',
-      divisionCondition: 'none',
-      allowNegative: false,
-      allowZero: false,
-      uniqueMode: 'exact',
-      displayFormat: 'horizontal',
-      showFirstExample: true,
-      fractionRule: { type: 'addition', allowMixed: true, sameDenominator: true, maxDenominator: 12 },
-    },
-  },
-  {
     id: 'g5-frac-diff-denom-add',
     grade: '초등학교 5학년',
     gradeShort: '초5',
+    semester: 1,
+    semesterLabel: '초5(1학기)',
     title: '5학년 분모가 다른 분수의 덧셈',
     description: '통분을 거쳐 이분모 분수를 더하고 대분수 기약분수로 완성합니다.',
     rule: {
@@ -356,6 +497,8 @@ export const GRADE_PRESETS: PresetItem[] = [
     id: 'g5-frac-diff-denom-sub',
     grade: '초등학교 5학년',
     gradeShort: '초5',
+    semester: 1,
+    semesterLabel: '초5(1학기)',
     title: '5학년 분모가 다른 분수의 뺄셈',
     description: '통분과 받아내림을 활용하여 분모가 다른 대분수의 뺄셈을 연산합니다.',
     rule: {
@@ -381,6 +524,8 @@ export const GRADE_PRESETS: PresetItem[] = [
     id: 'g5-frac-multiplication',
     grade: '초등학교 5학년',
     gradeShort: '초5',
+    semester: 2,
+    semesterLabel: '초5(2학기)',
     title: '5학년 분수의 곱셈',
     description: '진분수와 대분수의 곱셈을 약분을 활용하여 빠르고 정확하게 계산합니다.',
     rule: {
@@ -406,6 +551,8 @@ export const GRADE_PRESETS: PresetItem[] = [
     id: 'g5-decimal-multiplication',
     grade: '초등학교 5학년',
     gradeShort: '초5',
+    semester: 2,
+    semesterLabel: '초5(2학기)',
     title: '5학년 소수의 곱셈',
     description: '소수점 위치 변화와 자릿수 이동 원리를 완벽하게 숙달합니다.',
     rule: {
@@ -427,11 +574,14 @@ export const GRADE_PRESETS: PresetItem[] = [
       decimalRule: { decimalPlacesA: [1], decimalPlacesB: [1] },
     },
   },
-  // ================= 6학년 (초6) 추천 연산 8종 =================
+
+  // ================= 6학년 (초6) =================
   {
     id: 'g6-frac-division-basic',
     grade: '초등학교 6학년',
     gradeShort: '초6',
+    semester: 1,
+    semesterLabel: '초6(1학기)',
     title: '6학년 분수의 나눗셈 (기초)',
     description: '(분수) ÷ (자연수) 및 (자연수) ÷ (자연수)를 분수로 나타내는 기초 나눗셈입니다.',
     rule: {
@@ -457,6 +607,8 @@ export const GRADE_PRESETS: PresetItem[] = [
     id: 'g6-frac-division-advanced',
     grade: '초등학교 6학년',
     gradeShort: '초6',
+    semester: 2,
+    semesterLabel: '초6(2학기)',
     title: '6학년 분수의 나눗셈 (역수 곱셈)',
     description: '나누는 분수의 역수를 곱하여 (분수) ÷ (분수)를 완벽하게 계산합니다.',
     rule: {
@@ -482,6 +634,8 @@ export const GRADE_PRESETS: PresetItem[] = [
     id: 'g6-decimal-division-quotient',
     grade: '초등학교 6학년',
     gradeShort: '초6',
+    semester: 1,
+    semesterLabel: '초6(1학기)',
     title: '6학년 소수의 나눗셈 (몫 구하기)',
     description: '(소수) ÷ (자연수) 및 (소수) ÷ (소수)에서 나누어떨어지는 몫을 구합니다.',
     rule: {
@@ -507,6 +661,8 @@ export const GRADE_PRESETS: PresetItem[] = [
     id: 'g6-decimal-division-remainder',
     grade: '초등학교 6학년',
     gradeShort: '초6',
+    semester: 2,
+    semesterLabel: '초6(2학기)',
     title: '6학년 소수 나눗셈의 몫과 나머지',
     description: '자연수 몫을 구하고 처음 소수점 위치를 그대로 지킨 나머지를 계산합니다.',
     rule: {
@@ -532,6 +688,8 @@ export const GRADE_PRESETS: PresetItem[] = [
     id: 'g6-simplest-ratio',
     grade: '초등학교 6학년',
     gradeShort: '초6',
+    semester: 2,
+    semesterLabel: '초6(2학기)',
     title: '6학년 가장 간단한 자연수의 비로 나타내기',
     description: '비의 성질을 활용하여 비를 가장 간단한 자연수의 비로 바꿉니다.',
     rule: {
@@ -557,6 +715,8 @@ export const GRADE_PRESETS: PresetItem[] = [
     id: 'g6-proportion-solve',
     grade: '초등학교 6학년',
     gradeShort: '초6',
+    semester: 2,
+    semesterLabel: '초6(2학기)',
     title: '6학년 비례식 완성하기 (외항=내항의 곱)',
     description: '비례식의 성질을 활용하여 미지항(□)의 값을 빠르고 정확하게 계산합니다.',
     rule: {
@@ -582,6 +742,8 @@ export const GRADE_PRESETS: PresetItem[] = [
     id: 'g6-percentage-calculation',
     grade: '초등학교 6학년',
     gradeShort: '초6',
+    semester: 1,
+    semesterLabel: '초6(1학기)',
     title: '6학년 비와 비율 (백분율 % 구하기)',
     description: '기준량과 비교하는 양의 비율을 백분율(%)로 환산하는 실전 연산입니다.',
     rule: {
@@ -607,6 +769,8 @@ export const GRADE_PRESETS: PresetItem[] = [
     id: 'g6-all-round-challenge',
     grade: '초등학교 6학년',
     gradeShort: '초6',
+    semester: 2,
+    semesterLabel: '초6(2학기)',
     title: '6학년 초등 연산 총정리 (사칙 혼합 심화)',
     description: '초등 수학 6개 학년의 연산 순서와 집중력을 총결산하는 혼합 연산 챌린지입니다.',
     rule: {

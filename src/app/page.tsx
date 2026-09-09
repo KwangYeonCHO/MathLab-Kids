@@ -43,6 +43,7 @@ export default function HomePage() {
   };
 
   const [selectedGrade, setSelectedGrade] = useState<string>('all');
+  const [selectedSemester, setSelectedSemester] = useState<'all' | 1 | 2>('all');
 
   const gradeTabs = [
     { id: 'all', label: `전체 (${GRADE_PRESETS.length})` },
@@ -54,10 +55,17 @@ export default function HomePage() {
     { id: '초6', label: '6학년' },
   ];
 
-  const filteredPresets =
-    selectedGrade === 'all'
-      ? GRADE_PRESETS
-      : GRADE_PRESETS.filter((p) => p.gradeShort === selectedGrade);
+  const semesterTabs = [
+    { id: 'all', label: '전체 학기' },
+    { id: 1, label: selectedGrade === 'all' ? '1학기 전체' : `${selectedGrade}(1학기)` },
+    { id: 2, label: selectedGrade === 'all' ? '2학기 전체' : `${selectedGrade}(2학기)` },
+  ];
+
+  const filteredPresets = GRADE_PRESETS.filter((p) => {
+    if (selectedGrade !== 'all' && p.gradeShort !== selectedGrade) return false;
+    if (selectedSemester !== 'all' && p.semester !== selectedSemester) return false;
+    return true;
+  });
 
   return (
     <div className="space-y-10 pb-10">
@@ -189,6 +197,28 @@ export default function HomePage() {
           ))}
         </div>
 
+        {/* 학기 서브 필터 탭 */}
+        <div className="flex items-center gap-1.5 pt-2 border-t border-slate-100">
+          <span className="text-xs font-bold text-slate-400 mr-1">학기 선택:</span>
+          {semesterTabs.map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setSelectedSemester(tab.id as 'all' | 1 | 2)}
+              className={`px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap transition-all ${
+                selectedSemester === tab.id
+                  ? 'bg-slate-800 text-white shadow-xs'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+          <span className="text-xs text-slate-400 ml-auto font-medium hidden sm:inline">
+            총 {filteredPresets.length}개 프리셋
+          </span>
+        </div>
+
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
           {filteredPresets.map((preset) => (
             <div
@@ -196,8 +226,8 @@ export default function HomePage() {
               className="p-4 bg-slate-50 rounded-xl border border-slate-200 hover:border-emerald-400 hover:bg-emerald-50/30 transition-all flex flex-col justify-between"
             >
               <div>
-                <span className="inline-block px-2 py-0.5 rounded text-[11px] font-bold bg-white text-emerald-700 border border-slate-200 mb-2">
-                  {preset.gradeShort}
+                <span className="inline-block px-2.5 py-0.5 rounded text-[11px] font-extrabold bg-white text-emerald-700 border border-slate-200 mb-2 shadow-2xs">
+                  {preset.semesterLabel}
                 </span>
                 <h3 className="font-bold text-slate-900 text-sm mb-1.5">{preset.title}</h3>
                 <p className="text-xs text-slate-500 leading-relaxed line-clamp-2">

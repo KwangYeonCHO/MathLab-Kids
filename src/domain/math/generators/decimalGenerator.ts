@@ -40,7 +40,10 @@ export function generateDecimalProblem(
   let opA = rawIntA / factorA;
   let opB = rawIntB / factorB;
 
-  const operation = rule.operations[0] || 'multiplication';
+  const operation =
+    rule.operations.length > 1
+      ? rule.operations[getRandomInt(0, rule.operations.length - 1)]
+      : (rule.operations[0] || 'multiplication');
   let answer = 0;
   let remainder: number | undefined = undefined;
 
