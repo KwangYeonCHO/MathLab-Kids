@@ -42,13 +42,17 @@ export function ChildKeypad({
   const digits = ['1', '2', '3', '4', '5', '6', '7', '8', '9'];
 
   return (
-    <div className="w-full max-w-sm mx-auto bg-slate-100 p-2 sm:p-4 rounded-2xl border border-slate-200 shadow-sm select-none">
+    <div
+      onMouseDown={(e) => e.preventDefault()}
+      className="w-full max-w-sm mx-auto bg-slate-100 p-2 sm:p-4 rounded-2xl border border-slate-200 shadow-sm select-none"
+    >
       {/* 3x3 숫자 그리드 (1~9) */}
       <div className="grid grid-cols-3 gap-1.5 sm:gap-2.5">
         {digits.map((digit) => (
           <button
             key={digit}
             type="button"
+            onMouseDown={(e) => e.preventDefault()}
             onClick={() => handlePress(() => onDigit(digit))}
             className="h-[42px] sm:h-14 bg-white hover:bg-slate-50 active:bg-slate-200 text-xl sm:text-3xl font-bold text-slate-800 rounded-xl shadow-2xs sm:shadow-sm border border-slate-200 active:scale-95 transition-all flex items-center justify-center math-font"
           >
@@ -60,6 +64,7 @@ export function ChildKeypad({
         {allowDecimal ? (
           <button
             type="button"
+            onMouseDown={(e) => e.preventDefault()}
             onClick={() => handlePress(() => onDigit('.'))}
             title="소수점"
             className="h-[42px] sm:h-14 bg-white hover:bg-slate-50 active:bg-slate-200 text-2xl sm:text-3xl font-black text-slate-800 rounded-xl shadow-2xs sm:shadow-sm border border-slate-200 active:scale-95 transition-all flex items-center justify-center math-font"
@@ -69,6 +74,7 @@ export function ChildKeypad({
         ) : allowNegative ? (
           <button
             type="button"
+            onMouseDown={(e) => e.preventDefault()}
             onClick={() => handlePress(() => onToggleNegative?.())}
             className="h-[42px] sm:h-14 bg-slate-200 hover:bg-slate-300 active:bg-slate-400 text-2xl font-bold text-slate-700 rounded-xl shadow-2xs sm:shadow-sm transition-all flex items-center justify-center math-font"
           >
@@ -77,6 +83,7 @@ export function ChildKeypad({
         ) : (
           <button
             type="button"
+            onMouseDown={(e) => e.preventDefault()}
             onClick={() => handlePress(onClear)}
             title="모두 지우기"
             className="h-[42px] sm:h-14 bg-slate-200 hover:bg-slate-300 active:bg-slate-400 text-slate-700 rounded-xl shadow-2xs sm:shadow-sm transition-all flex items-center justify-center gap-1 text-xs sm:text-sm font-bold"
@@ -88,6 +95,7 @@ export function ChildKeypad({
 
         <button
           type="button"
+          onMouseDown={(e) => e.preventDefault()}
           onClick={() => handlePress(() => onDigit('0'))}
           className="h-[42px] sm:h-14 bg-white hover:bg-slate-50 active:bg-slate-200 text-xl sm:text-3xl font-bold text-slate-800 rounded-xl shadow-2xs sm:shadow-sm border border-slate-200 active:scale-95 transition-all flex items-center justify-center math-font"
         >
@@ -96,6 +104,7 @@ export function ChildKeypad({
 
         <button
           type="button"
+          onMouseDown={(e) => e.preventDefault()}
           onClick={() => handlePress(onBackspace)}
           title="한 글자 지우기"
           className="h-[42px] sm:h-14 bg-rose-100 hover:bg-rose-200 active:bg-rose-300 text-rose-700 rounded-xl shadow-2xs sm:shadow-sm transition-all flex items-center justify-center"
@@ -111,6 +120,7 @@ export function ChildKeypad({
             {onPrev && (
               <button
                 type="button"
+                onMouseDown={(e) => e.preventDefault()}
                 onClick={() => handlePress(onPrev)}
                 disabled={!canPrev}
                 title="이전 문제"
@@ -123,6 +133,7 @@ export function ChildKeypad({
 
             <button
               type="button"
+              onMouseDown={(e) => e.preventDefault()}
               onClick={() => handlePress(onSubmit)}
               className="flex-1 h-[42px] sm:h-14 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white text-sm sm:text-lg font-extrabold rounded-xl shadow-sm sm:shadow-md active:scale-98 transition-all flex items-center justify-center gap-1.5"
             >
@@ -133,6 +144,7 @@ export function ChildKeypad({
             {onNext && (
               <button
                 type="button"
+                onMouseDown={(e) => e.preventDefault()}
                 onClick={() => handlePress(onNext)}
                 disabled={!canNext}
                 title="다음 문제"
@@ -146,6 +158,7 @@ export function ChildKeypad({
         ) : (
           <button
             type="button"
+            onMouseDown={(e) => e.preventDefault()}
             onClick={() => handlePress(onSubmit)}
             className="w-full h-[42px] sm:h-14 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white text-base sm:text-xl font-bold rounded-xl shadow-sm sm:shadow-md active:scale-98 transition-all flex items-center justify-center gap-2"
           >

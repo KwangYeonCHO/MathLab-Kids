@@ -14,6 +14,7 @@ interface ProportionProblemProps {
   compact?: boolean;
   density?: 'normal' | 'compact' | 'dense' | 'ultra-dense';
   virtualKeyboard?: boolean;
+  autoFocus?: boolean;
 }
 
 export function ProportionProblem({
@@ -27,9 +28,24 @@ export function ProportionProblem({
   compact = false,
   density,
   virtualKeyboard = false,
+  autoFocus = false,
 }: ProportionProblemProps) {
   const { proportion, answer, isExample } = problem;
+  const inputRef = React.useRef<HTMLInputElement>(null);
   const shouldShowAnswer = showAnswer ?? (Boolean(isExample) && Boolean(showExampleAnswer));
+
+  // 단일 문제 모드에서 입력창 자동 포커스 유지
+  React.useEffect(() => {
+    if (!autoFocus || isReadOnly || shouldShowAnswer) return;
+
+    const focusTarget = () => {
+      inputRef.current?.focus({ preventScroll: true });
+    };
+
+    focusTarget();
+    const rId = requestAnimationFrame(focusTarget);
+    return () => cancelAnimationFrame(rId);
+  }, [autoFocus, isReadOnly, shouldShowAnswer]);
 
   const p = proportion || { a: 3, b: 5, c: 12, d: null, unknownPos: 'D' };
 
@@ -80,6 +96,8 @@ export function ProportionProblem({
 
     return (
       <input
+        ref={inputRef}
+        autoFocus={autoFocus}
         type="text"
         inputMode={virtualKeyboard ? 'none' : 'numeric'}
         value={valStr}

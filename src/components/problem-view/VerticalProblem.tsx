@@ -16,6 +16,7 @@ interface VerticalProblemProps {
   compact?: boolean;
   density?: 'normal' | 'compact' | 'dense' | 'ultra-dense';
   virtualKeyboard?: boolean;
+  autoFocus?: boolean;
 }
 
 function normalizeNumeric(val: string, allowDecimal = false): string {
@@ -41,8 +42,25 @@ export function VerticalProblem({
   compact = false,
   density,
   virtualKeyboard = false,
+  autoFocus = false,
 }: VerticalProblemProps) {
   const { operandA, operandB, operation, answer, isExample } = problem;
+
+  const inputRef = React.useRef<HTMLInputElement>(null);
+  const shouldShowAnswer = showAnswer ?? (Boolean(isExample) && Boolean(showExampleAnswer));
+
+  // 단일 문제 모드에서 입력창 자동 포커스 유지
+  React.useEffect(() => {
+    if (!autoFocus || isReadOnly || shouldShowAnswer) return;
+
+    const focusTarget = () => {
+      inputRef.current?.focus({ preventScroll: true });
+    };
+
+    focusTarget();
+    const rId = requestAnimationFrame(focusTarget);
+    return () => cancelAnimationFrame(rId);
+  }, [autoFocus, isReadOnly, shouldShowAnswer]);
 
   const opSymbol = {
     addition: '+',
@@ -62,9 +80,6 @@ export function VerticalProblem({
 
   const digitsA = padDigits(strA, maxDigits);
   const digitsB = padDigits(strB, maxDigits);
-
-  // 정답 노출 여부: 명시적 showAnswer가 있거나, 첫 문제 예시인 경우에만 노출
-  const shouldShowAnswer = showAnswer ?? (Boolean(isExample) && Boolean(showExampleAnswer));
 
   // 밀도별 폰트 크기 (A4 1장 내 30~40문제 자동 압축 대응)
   const fontClass = density === 'ultra-dense'
@@ -164,6 +179,8 @@ export function VerticalProblem({
             <div className={`w-full ${answerHeight} border-b border-dashed border-slate-200 paper:border-transparent rounded-xs`} />
           ) : (
             <input
+              ref={inputRef}
+              autoFocus={autoFocus}
               type="text"
               inputMode={virtualKeyboard ? 'none' : 'numeric'}
               value={valStr}

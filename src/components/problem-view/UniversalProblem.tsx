@@ -24,6 +24,8 @@ export interface UniversalProblemProps {
   onFocusRemainder?: () => void;
   onFocusFractionPart?: (part: 'whole' | 'num' | 'den') => void;
   activeFractionPart?: 'whole' | 'num' | 'den';
+  activeInputType?: 'answer' | 'remainder' | 'whole' | 'num' | 'den';
+  autoFocus?: boolean;
   onSubmit?: () => void;
   isReadOnly?: boolean;
   showAnswer?: boolean;
@@ -41,27 +43,28 @@ export function UniversalProblem(props: UniversalProblemProps) {
     return (
       <FractionProblem
         {...props}
-        activePart={props.activeFractionPart}
+        autoFocus={props.autoFocus}
+        activePart={props.activeFractionPart || (props.activeInputType as 'whole' | 'num' | 'den')}
         onFocusPart={props.onFocusFractionPart}
       />
     );
   }
 
   if (problem.category === 'mixed_operation') {
-    return <MixedOpProblem {...props} />;
+    return <MixedOpProblem {...props} autoFocus={props.autoFocus} />;
   }
 
   if (problem.category === 'proportion') {
-    return <ProportionProblem {...props} />;
+    return <ProportionProblem {...props} autoFocus={props.autoFocus} />;
   }
 
   if (problem.category === 'factors_multiples') {
-    return <FactorProblem {...props} />;
+    return <FactorProblem {...props} autoFocus={props.autoFocus} />;
   }
 
   if (problem.displayFormat === 'vertical') {
-    return <VerticalProblem {...props} />;
+    return <VerticalProblem {...props} autoFocus={props.autoFocus} />;
   }
 
-  return <HorizontalProblem {...props} />;
+  return <HorizontalProblem {...props} autoFocus={props.autoFocus} activeInputType={props.activeInputType} />;
 }

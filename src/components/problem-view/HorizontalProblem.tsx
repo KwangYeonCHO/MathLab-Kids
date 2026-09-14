@@ -20,6 +20,8 @@ interface HorizontalProblemProps {
   fullWidth?: boolean; // 열 너비 전체를 채우고 입력 박스를 우측 정렬
   density?: 'normal' | 'compact' | 'dense' | 'ultra-dense';
   virtualKeyboard?: boolean;
+  autoFocus?: boolean;
+  activeInputType?: 'answer' | 'remainder' | 'whole' | 'num' | 'den';
 }
 
 function normalizeNumeric(val: string, allowDecimal = false): string {
@@ -50,8 +52,33 @@ export function HorizontalProblem({
   fullWidth = false,
   density,
   virtualKeyboard = false,
+  autoFocus = false,
+  activeInputType = 'answer',
 }: HorizontalProblemProps) {
   const { operandA, operandB, operation, answer, remainder, isExample } = problem;
+
+  const answerInputRef = React.useRef<HTMLInputElement>(null);
+  const remainderInputRef = React.useRef<HTMLInputElement>(null);
+
+  const shouldShowAnswer = showAnswer ?? (Boolean(isExample) && Boolean(showExampleAnswer));
+  const isDivisionWithRemainder = operation === 'division' && remainder !== undefined;
+
+  // 단일 문제 풀이 모드에서 입력창 자동 포커스 유지
+  React.useEffect(() => {
+    if (!autoFocus || isReadOnly || shouldShowAnswer) return;
+
+    const focusTarget = () => {
+      if (isDivisionWithRemainder && activeInputType === 'remainder') {
+        remainderInputRef.current?.focus({ preventScroll: true });
+      } else {
+        answerInputRef.current?.focus({ preventScroll: true });
+      }
+    };
+
+    focusTarget();
+    const rId = requestAnimationFrame(focusTarget);
+    return () => cancelAnimationFrame(rId);
+  }, [autoFocus, isReadOnly, shouldShowAnswer, isDivisionWithRemainder, activeInputType]);
 
   const opSymbol = {
     addition: '+',
@@ -59,10 +86,6 @@ export function HorizontalProblem({
     multiplication: '×',
     division: '÷',
   }[operation];
-
-  // 정답 노출 여부: 명시적 showAnswer가 있거나, 첫 문제 예시인 경우에만 노출
-  const shouldShowAnswer = showAnswer ?? (Boolean(isExample) && Boolean(showExampleAnswer));
-  const isDivisionWithRemainder = operation === 'division' && remainder !== undefined;
 
   const fontClass = density === 'ultra-dense'
     ? 'text-xs paper:text-[11px]'
@@ -190,12 +213,26 @@ export function HorizontalProblem({
         <div className="inline-flex items-center flex-nowrap gap-1.5">
           {/* 몫 또는 정답 입력 */}
           <input
+            ref={answerInputRef}
+            autoFocus={autoFocus && activeInputType !== 'remainder'}
             type="text"
             inputMode={virtualKeyboard ? 'none' : 'numeric'}
             value={answerDisplayValue}
             onFocus={onFocusAnswer}
             onKeyDown={(e) => {
+              if (e.key === 'Tab' && isDivisionWithRemainder && !e.shiftKey) {
+                e.preventDefault();
+                onFocusRemainder?.();
+                remainderInputRef.current?.focus({ preventScroll: true });
+                return;
+              }
               if (e.key === 'Enter') {
+                if (isDivisionWithRemainder && (userRemainder === null || userRemainder === undefined)) {
+                  e.preventDefault();
+                  onFocusRemainder?.();
+                  remainderInputRef.current?.focus({ preventScroll: true });
+                  return;
+                }
                 onSubmit?.();
               }
             }}
@@ -218,11 +255,19 @@ export function HorizontalProblem({
             <>
               <span className="text-slate-400 font-bold text-sm">…</span>
               <input
+                ref={remainderInputRef}
+                autoFocus={autoFocus && activeInputType === 'remainder'}
                 type="text"
                 inputMode={virtualKeyboard ? 'none' : 'numeric'}
                 value={remainderDisplayValue}
                 onFocus={onFocusRemainder}
                 onKeyDown={(e) => {
+                  if (e.key === 'Tab' && e.shiftKey) {
+                    e.preventDefault();
+                    onFocusAnswer?.();
+                    answerInputRef.current?.focus({ preventScroll: true });
+                    return;
+                  }
                   if (e.key === 'Enter') {
                     onSubmit?.();
                   }

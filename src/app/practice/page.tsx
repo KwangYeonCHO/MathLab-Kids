@@ -494,6 +494,8 @@ export default function PracticePage() {
                   userRemainder={currentAnswer?.remainder}
                   userFraction={currentAnswer?.fractionAnswer}
                   rawInput={currentAnswer?.rawInput}
+                  autoFocus={practiceViewMode === 'single'}
+                  activeInputType={activeInputType}
                   activeFractionPart={activeFractionPart}
                   onFocusFractionPart={(part) => {
                     setActiveInputType(part);
@@ -521,6 +523,7 @@ export default function PracticePage() {
               <div className="flex justify-center gap-2 mt-1 sm:mt-3">
                 <button
                   type="button"
+                  onMouseDown={(e) => e.preventDefault()}
                   onClick={() => {
                     setActiveInputType('whole');
                     setActiveFractionPart('whole');
@@ -535,6 +538,7 @@ export default function PracticePage() {
                 </button>
                 <button
                   type="button"
+                  onMouseDown={(e) => e.preventDefault()}
                   onClick={() => {
                     setActiveInputType('num');
                     setActiveFractionPart('num');
@@ -549,6 +553,7 @@ export default function PracticePage() {
                 </button>
                 <button
                   type="button"
+                  onMouseDown={(e) => e.preventDefault()}
                   onClick={() => {
                     setActiveInputType('den');
                     setActiveFractionPart('den');
@@ -569,6 +574,7 @@ export default function PracticePage() {
               <div className="flex justify-center gap-2 mt-1 sm:mt-3">
                 <button
                   type="button"
+                  onMouseDown={(e) => e.preventDefault()}
                   onClick={() => setActiveInputType('answer')}
                   className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
                     activeInputType === 'answer'
@@ -580,6 +586,7 @@ export default function PracticePage() {
                 </button>
                 <button
                   type="button"
+                  onMouseDown={(e) => e.preventDefault()}
                   onClick={() => setActiveInputType('remainder')}
                   className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
                     activeInputType === 'remainder'

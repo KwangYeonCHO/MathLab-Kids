@@ -17,6 +17,7 @@ interface FractionProblemProps {
   compact?: boolean;
   density?: 'normal' | 'compact' | 'dense' | 'ultra-dense';
   virtualKeyboard?: boolean;
+  autoFocus?: boolean;
 }
 
 export function FractionProblem({
@@ -32,8 +33,34 @@ export function FractionProblem({
   compact = false,
   density,
   virtualKeyboard = false,
+  autoFocus = false,
 }: FractionProblemProps) {
   const { operation, fractionA, fractionB, fractionAnswer, isExample } = problem;
+
+  const wholeInputRef = React.useRef<HTMLInputElement>(null);
+  const numInputRef = React.useRef<HTMLInputElement>(null);
+  const denInputRef = React.useRef<HTMLInputElement>(null);
+
+  const shouldShowAnswer = showAnswer ?? (Boolean(isExample) && Boolean(showExampleAnswer));
+
+  // 단일 문제 모드에서 활성 분수 파트(자연수/분자/분모) 자동 포커스 유지
+  React.useEffect(() => {
+    if (!autoFocus || isReadOnly || shouldShowAnswer) return;
+
+    const focusTarget = () => {
+      if (activePart === 'whole' && wholeInputRef.current) {
+        wholeInputRef.current.focus({ preventScroll: true });
+      } else if (activePart === 'den' && denInputRef.current) {
+        denInputRef.current.focus({ preventScroll: true });
+      } else if (numInputRef.current) {
+        numInputRef.current.focus({ preventScroll: true });
+      }
+    };
+
+    focusTarget();
+    const rId = requestAnimationFrame(focusTarget);
+    return () => cancelAnimationFrame(rId);
+  }, [autoFocus, isReadOnly, shouldShowAnswer, activePart]);
 
   const opSymbol = {
     addition: '+',
@@ -41,8 +68,6 @@ export function FractionProblem({
     multiplication: '×',
     division: '÷',
   }[operation] || '+';
-
-  const shouldShowAnswer = showAnswer ?? (Boolean(isExample) && Boolean(showExampleAnswer));
 
   const fA = fractionA || { numerator: 1, denominator: 2 };
   const fB = fractionB || { numerator: 1, denominator: 3 };
@@ -118,10 +143,19 @@ export function FractionProblem({
         <div className="inline-flex items-center gap-1">
           {/* 자연수 부분 입력 (대분수용) */}
           <input
+            ref={wholeInputRef}
+            autoFocus={autoFocus && activePart === 'whole'}
             type="text"
             inputMode={virtualKeyboard ? 'none' : 'numeric'}
             value={userFraction?.whole !== undefined && userFraction.whole !== null ? userFraction.whole : ''}
             onFocus={() => onFocusPart?.('whole')}
+            onKeyDown={(e) => {
+              if ((e.key === 'Tab' && !e.shiftKey) || e.key === 'Enter') {
+                e.preventDefault();
+                onFocusPart?.('num');
+                numInputRef.current?.focus({ preventScroll: true });
+              }
+            }}
             placeholder="자연수"
             onChange={(e) => {
               const val = e.target.value.replace(/[^0-9]/g, '');
@@ -140,10 +174,23 @@ export function FractionProblem({
           {/* 분자 / 분모 스택 */}
           <div className="inline-flex flex-col items-center gap-0.5">
             <input
+              ref={numInputRef}
+              autoFocus={autoFocus && activePart === 'num'}
               type="text"
               inputMode={virtualKeyboard ? 'none' : 'numeric'}
               value={userFraction?.numerator !== undefined && userFraction.numerator !== null ? userFraction.numerator : ''}
               onFocus={() => onFocusPart?.('num')}
+              onKeyDown={(e) => {
+                if ((e.key === 'Tab' && !e.shiftKey) || e.key === 'Enter') {
+                  e.preventDefault();
+                  onFocusPart?.('den');
+                  denInputRef.current?.focus({ preventScroll: true });
+                } else if (e.key === 'Tab' && e.shiftKey && wholeInputRef.current) {
+                  e.preventDefault();
+                  onFocusPart?.('whole');
+                  wholeInputRef.current.focus({ preventScroll: true });
+                }
+              }}
               placeholder="분자"
               onChange={(e) => {
                 const val = e.target.value.replace(/[^0-9]/g, '');
@@ -160,10 +207,21 @@ export function FractionProblem({
             />
             <div className="w-full h-[1.5px] bg-slate-400" />
             <input
+              ref={denInputRef}
+              autoFocus={autoFocus && activePart === 'den'}
               type="text"
               inputMode={virtualKeyboard ? 'none' : 'numeric'}
               value={userFraction?.denominator !== undefined && userFraction.denominator !== null ? userFraction.denominator : ''}
               onFocus={() => onFocusPart?.('den')}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  onSubmit?.();
+                } else if (e.key === 'Tab' && e.shiftKey) {
+                  e.preventDefault();
+                  onFocusPart?.('num');
+                  numInputRef.current?.focus({ preventScroll: true });
+                }
+              }}
               placeholder="분모"
               onChange={(e) => {
                 const val = e.target.value.replace(/[^0-9]/g, '');
