@@ -112,7 +112,7 @@ export default function PrintPage() {
 
   const effectiveColumns =
     columns === 'auto'
-      ? getAutoColumns(currentRule.count, currentRule.displayFormat)
+      ? getAutoColumns(currentRule.count, currentRule.displayFormat, currentRule.category, currentRule.operandCount)
       : columns;
 
   const density = isCompact

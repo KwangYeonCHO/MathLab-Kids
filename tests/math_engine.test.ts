@@ -205,8 +205,8 @@ describe('10,000회 대량 무결성 스트레스 테스트 (매뉴얼 26.2)', (
   });
 
   describe('학년·학기별 프리셋(GRADE_PRESETS) 2022 개정 교육과정 전체 유효성 검증', () => {
-    it('총 29개의 공식 프리셋이 모두 20문항을 오류 없이 정상 생성해야 함', () => {
-      expect(GRADE_PRESETS.length).toBe(29);
+    it('총 30개의 공식 프리셋이 모두 20문항을 오류 없이 정상 생성해야 함', () => {
+      expect(GRADE_PRESETS.length).toBe(30);
 
       GRADE_PRESETS.forEach((preset) => {
         expect([1, 2]).toContain(preset.semester);

@@ -44,7 +44,7 @@ export function VerticalProblem({
   virtualKeyboard = false,
   autoFocus = false,
 }: VerticalProblemProps) {
-  const { operandA, operandB, operation, answer, isExample } = problem;
+  const { operandA, operandB, operandC, operation, operation2, answer, isExample } = problem;
 
   const inputRef = React.useRef<HTMLInputElement>(null);
   const shouldShowAnswer = showAnswer ?? (Boolean(isExample) && Boolean(showExampleAnswer));
@@ -69,9 +69,24 @@ export function VerticalProblem({
     division: '÷',
   }[operation];
 
+  const opSymbol2 = operation2
+    ? {
+        addition: '+',
+        subtraction: '−',
+        multiplication: '×',
+        division: '÷',
+      }[operation2]
+    : opSymbol;
+
   const strA = operandA.toString();
   const strB = operandB.toString();
-  const maxDigits = Math.max(strA.length, strB.length, answer.toString().length);
+  const strC = operandC !== undefined ? operandC.toString() : '';
+  const maxDigits = Math.max(
+    strA.length,
+    strB.length,
+    strC.length,
+    answer.toString().length
+  );
 
   // 자리별 자릿수 배열 (우측 정렬용)
   const padDigits = (str: string, len: number) => {
@@ -80,6 +95,7 @@ export function VerticalProblem({
 
   const digitsA = padDigits(strA, maxDigits);
   const digitsB = padDigits(strB, maxDigits);
+  const digitsC = operandC !== undefined ? padDigits(strC, maxDigits) : [];
 
   // 밀도별 폰트 크기 (A4 1장 내 30~40문제 자동 압축 대응)
   const fontClass = density === 'ultra-dense'
@@ -145,17 +161,42 @@ export function VerticalProblem({
           ))}
         </div>
 
-        {/* 연산 기호 + 아랫수 (피연산자 B) */}
-        <div className="flex items-center justify-end gap-1 sm:gap-1.5 paper:gap-1 mt-0.5 sm:mt-1 paper:mt-1 pr-1">
-          <span className="font-extrabold text-emerald-600 paper:text-slate-900 mr-1 sm:mr-2 paper:mr-2">
-            {opSymbol}
-          </span>
-          {digitsB.map((d, i) => (
-            <span key={i} className={colWidthClass}>
-              {d === ' ' ? '' : d}
+        {/* 두 번째 수 (피연산자 B) */}
+        {operandC !== undefined ? (
+          <div className="flex justify-end gap-1 sm:gap-1.5 paper:gap-1 mt-0.5 sm:mt-1 paper:mt-1 pr-1">
+            {digitsB.map((d, i) => (
+              <span key={i} className={colWidthClass}>
+                {d === ' ' ? '' : d}
+              </span>
+            ))}
+          </div>
+        ) : (
+          /* 2개 수 연산 시: 연산 기호 + 피연산자 B */
+          <div className="flex items-center justify-end gap-1 sm:gap-1.5 paper:gap-1 mt-0.5 sm:mt-1 paper:mt-1 pr-1">
+            <span className="font-extrabold text-emerald-600 paper:text-slate-900 mr-1 sm:mr-2 paper:mr-2">
+              {opSymbol}
             </span>
-          ))}
-        </div>
+            {digitsB.map((d, i) => (
+              <span key={i} className={colWidthClass}>
+                {d === ' ' ? '' : d}
+              </span>
+            ))}
+          </div>
+        )}
+
+        {/* 세 번째 수 (피연산자 C) - 3연산자일 때만 렌더링 (마지막 줄에 연산 기호 부착) */}
+        {operandC !== undefined && (
+          <div className="flex items-center justify-end gap-1 sm:gap-1.5 paper:gap-1 mt-0.5 sm:mt-1 paper:mt-1 pr-1">
+            <span className="font-extrabold text-emerald-600 paper:text-slate-900 mr-1 sm:mr-2 paper:mr-2">
+              {opSymbol2}
+            </span>
+            {digitsC.map((d, i) => (
+              <span key={i} className={colWidthClass}>
+                {d === ' ' ? '' : d}
+              </span>
+            ))}
+          </div>
+        )}
 
         {/* 밑줄 (구분선) */}
         <div className={dividerClass} />

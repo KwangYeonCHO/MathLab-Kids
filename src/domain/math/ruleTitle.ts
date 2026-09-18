@@ -101,6 +101,17 @@ export function matchesPreset(rule: WorksheetRule, presetRule: WorksheetRule): b
   if (rule.borrowCondition !== presetRule.borrowCondition) return false;
   if (rule.divisionCondition !== presetRule.divisionCondition) return false;
 
+  // 9. 피연산자 개수(2개 vs 3개) 비교
+  const count1 = rule.operandCount ?? 2;
+  const count2 = presetRule.operandCount ?? 2;
+  if (count1 !== count2) return false;
+
+  if (count1 === 3) {
+    const digitsC1 = [...(rule.operandC?.digits || rule.operandB.digits)].sort().join(',');
+    const digitsC2 = [...(presetRule.operandC?.digits || presetRule.operandB.digits)].sort().join(',');
+    if (digitsC1 !== digitsC2) return false;
+  }
+
   return true;
 }
 
@@ -138,7 +149,14 @@ export function resolveRuleTitle(rule: WorksheetRule): string {
   const digitsB = formatDigits(rule.operandB.digits);
 
   let digitsText = '';
-  if (digitsA === digitsB) {
+  if (rule.operandCount === 3) {
+    const digitsC = formatDigits(rule.operandC?.digits || rule.operandB.digits);
+    if (digitsA === digitsB && digitsB === digitsC) {
+      digitsText = `${digitsA} 세 수의`;
+    } else {
+      digitsText = '세 수의';
+    }
+  } else if (digitsA === digitsB) {
     digitsText = `${digitsA} 수의`;
   } else {
     digitsText = `${digitsA} 수와 ${digitsB} 수의`;

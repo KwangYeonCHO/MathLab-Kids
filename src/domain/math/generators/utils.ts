@@ -36,7 +36,9 @@ export function makeProblemKey(
   a: number,
   b: number,
   uniqueMode: UniqueMode,
-  problem?: Problem
+  problem?: Problem,
+  operandC?: number,
+  operation2?: Operation
 ): string {
   if (problem) {
     if (problem.category === 'fraction' && problem.fractionA && problem.fractionB) {
@@ -54,6 +56,20 @@ export function makeProblemKey(
     if (problem.category === 'factors_multiples') {
       return `fact:${problem.factorProblemType}:${problem.operandA},${problem.operandB}`;
     }
+  }
+
+  const c = problem?.operandC ?? operandC;
+  if (c !== undefined) {
+    const op2 = problem?.operation2 ?? operation2 ?? operation;
+    if (uniqueMode === 'commutative' && operation === 'addition' && op2 === 'addition') {
+      const sorted = [a, b, c].sort((x, y) => x - y).join(',');
+      return `add3:${sorted}`;
+    }
+    if (uniqueMode === 'commutative' && operation === 'multiplication' && op2 === 'multiplication') {
+      const sorted = [a, b, c].sort((x, y) => x - y).join(',');
+      return `mul3:${sorted}`;
+    }
+    return `${operation}:${op2}:${a},${b},${c}`;
   }
 
   if (uniqueMode === 'commutative' && (operation === 'addition' || operation === 'multiplication')) {

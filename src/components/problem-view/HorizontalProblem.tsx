@@ -55,7 +55,7 @@ export function HorizontalProblem({
   autoFocus = false,
   activeInputType = 'answer',
 }: HorizontalProblemProps) {
-  const { operandA, operandB, operation, answer, remainder, isExample } = problem;
+  const { operandA, operandB, operandC, operation, operation2, answer, remainder, isExample } = problem;
 
   const answerInputRef = React.useRef<HTMLInputElement>(null);
   const remainderInputRef = React.useRef<HTMLInputElement>(null);
@@ -86,6 +86,15 @@ export function HorizontalProblem({
     multiplication: '×',
     division: '÷',
   }[operation];
+
+  const opSymbol2 = operation2
+    ? {
+        addition: '+',
+        subtraction: '−',
+        multiplication: '×',
+        division: '÷',
+      }[operation2]
+    : opSymbol;
 
   const fontClass = density === 'ultra-dense'
     ? 'text-xs paper:text-[11px]'
@@ -157,11 +166,17 @@ export function HorizontalProblem({
 
   return (
     <div className={containerClass}>
-      {/* 1. 왼쪽: 수식 본체 (피연산자A + 연산기호 + 피연산자B) */}
+      {/* 1. 왼쪽: 수식 본체 (피연산자A + 연산기호1 + 피연산자B (+ 연산기호2 + 피연산자C)) */}
       <div className="flex items-center gap-1 sm:gap-1.5 paper:gap-0.5 flex-shrink-0">
         <span className="tabular-nums">{operandA}</span>
         <span className="text-emerald-600 font-extrabold px-0.5">{opSymbol}</span>
         <span className="tabular-nums">{operandB}</span>
+        {operandC !== undefined && (
+          <>
+            <span className="text-emerald-600 font-extrabold px-0.5">{opSymbol2}</span>
+            <span className="tabular-nums">{operandC}</span>
+          </>
+        )}
       </div>
 
       {/* 2. 오른쪽: 등호(=) + 답안 박스 */}

@@ -77,8 +77,10 @@ export interface WorksheetRule {
   title: string;
   operations: Operation[];
   count: number; // 문제 수 (기본 20)
+  operandCount?: 2 | 3; // 피연산자 개수 (2: 기본 두 수의 연산, 3: 세 수의 연산)
   operandA: NumberOperandRule;
   operandB: NumberOperandRule;
+  operandC?: NumberOperandRule; // 세 번째 수 (세 수의 연산 시)
   carryCondition: CarryCondition;
   borrowCondition: BorrowCondition;
   divisionCondition: DivisionRemainderCondition;
@@ -107,6 +109,8 @@ export interface Problem {
   category?: ProblemCategory; // 기본 'arithmetic'
   operandA: number;
   operandB: number;
+  operandC?: number; // 세 번째 수 (세 수의 연산 시)
+  operation2?: Operation; // 두 번째 연산자 (세 수의 연산 시)
   answer: number; // 덧셈/뺄셈/곱셈의 값 또는 나눗셈의 몫(quotient)
   remainder?: number; // 나눗셈의 나머지
   carries?: number; // 받아올림 횟수

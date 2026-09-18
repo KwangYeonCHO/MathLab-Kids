@@ -67,6 +67,33 @@ export const GRADE_PRESETS: PresetItem[] = [
       showFirstExample: true,
     },
   },
+  {
+    id: 'g1-three-numbers-add-sub',
+    grade: '초등학교 1학년',
+    gradeShort: '초1',
+    semester: 2,
+    semesterLabel: '초1(2학기)',
+    title: '1학년 세 수의 덧셈과 뺄셈',
+    description: '한 자리 수 세 개의 덧셈과 뺄셈을 순서대로 계산합니다. (예: 3 + 1 + 1, 7 − 2 − 3, 5 + 3 − 2)',
+    rule: {
+      schemaVersion: 1,
+      title: '1학년 세 수의 덧셈과 뺄셈',
+      operations: ['addition', 'subtraction'],
+      operandCount: 3,
+      count: 20,
+      operandA: { digits: [1], allowZeroEnding: true },
+      operandB: { digits: [1], allowZeroEnding: true },
+      operandC: { digits: [1], allowZeroEnding: true },
+      carryCondition: 'any',
+      borrowCondition: 'any',
+      divisionCondition: 'none',
+      allowNegative: false,
+      allowZero: false,
+      uniqueMode: 'exact',
+      displayFormat: 'horizontal',
+      showFirstExample: true,
+    },
+  },
 
   // ================= 2학년 (초2) =================
   {

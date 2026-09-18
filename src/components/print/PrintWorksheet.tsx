@@ -9,13 +9,20 @@ export type PrintDensity = 'normal' | 'compact' | 'dense' | 'ultra-dense';
 export function getAutoColumns(
   problemCount: number,
   displayFormat?: DisplayFormat,
-  category?: string
+  category?: string,
+  operandCount?: 2 | 3
 ): 2 | 3 | 4 | 5 | 6 {
   if (category === 'mixed_operation' || category === 'proportion') {
     if (problemCount <= 12) return 2;
     return 3;
   }
   if (category === 'fraction') {
+    if (problemCount <= 12) return 2;
+    if (problemCount <= 24) return 3;
+    return 4;
+  }
+  // 3개의 수 가로 연산은 수식이 길어지므로 최대 4열로 제한하여 글자 겹침 방지
+  if (operandCount === 3 && displayFormat !== 'vertical') {
     if (problemCount <= 12) return 2;
     if (problemCount <= 24) return 3;
     return 4;
@@ -73,7 +80,7 @@ export function PrintWorksheet({
 
   const effectiveColumns =
     columns === 'auto'
-      ? getAutoColumns(problems.length, rule.displayFormat, rule.category)
+      ? getAutoColumns(problems.length, rule.displayFormat, rule.category, rule.operandCount)
       : Math.min(6, Math.max(2, columns)) as 2 | 3 | 4 | 5 | 6;
 
   const density = compact

@@ -25,9 +25,10 @@ export function RuleEditor() {
   };
 
   // 자릿수 토글
-  const handleToggleDigit = (target: 'A' | 'B', digit: number) => {
-    const operandKey = target === 'A' ? 'operandA' : 'operandB';
-    const currentDigits = currentRule[operandKey].digits;
+  const handleToggleDigit = (target: 'A' | 'B' | 'C', digit: number) => {
+    const operandKey = target === 'A' ? 'operandA' : target === 'B' ? 'operandB' : 'operandC';
+    const currentTargetRule = currentRule[operandKey] || { digits: [1], allowZeroEnding: true };
+    const currentDigits = currentTargetRule.digits;
     let nextDigits = [...currentDigits];
 
     if (nextDigits.includes(digit)) {
@@ -41,8 +42,19 @@ export function RuleEditor() {
 
     setRule({
       [operandKey]: {
-        ...currentRule[operandKey],
+        ...currentTargetRule,
         digits: nextDigits,
+      },
+    });
+  };
+
+  // 피연산자 수 (2개 vs 3개) 변경
+  const handleSetOperandCount = (count: 2 | 3) => {
+    setRule({
+      operandCount: count,
+      operandC: currentRule.operandC || {
+        digits: [...(currentRule.operandB?.digits || [1])],
+        allowZeroEnding: true,
       },
     });
   };
@@ -136,13 +148,56 @@ export function RuleEditor() {
           </div>
         </div>
 
-        {/* 3. 자릿수 선택: 첫 번째 수 & 두 번째 수 */}
+        {/* 2.5. 연산할 수의 개수 (2개 vs 3개) */}
+        <div className="pt-2 border-t border-slate-100">
+          <label className="block text-sm font-bold text-slate-700 mb-2.5">
+            연산할 수의 개수 <span className="text-xs text-slate-400 font-normal">(2개 또는 3개의 수)</span>
+          </label>
+          <div className="grid grid-cols-2 gap-3 max-w-md">
+            <button
+              type="button"
+              onClick={() => handleSetOperandCount(2)}
+              className={`py-2.5 px-3.5 rounded-xl font-bold text-xs sm:text-sm border flex items-center justify-between transition-all ${
+                (currentRule.operandCount ?? 2) === 2
+                  ? 'border-emerald-500 bg-emerald-50 text-emerald-800 shadow-sm ring-1 ring-emerald-500'
+                  : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
+              }`}
+            >
+              <div className="text-left">
+                <div className="font-extrabold">2개의 수</div>
+                <div className="text-[11px] text-slate-400 font-normal">A ○ B 형태 (기본)</div>
+              </div>
+              {(currentRule.operandCount ?? 2) === 2 && (
+                <Check className="w-4 h-4 text-emerald-600 stroke-[3]" />
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={() => handleSetOperandCount(3)}
+              className={`py-2.5 px-3.5 rounded-xl font-bold text-xs sm:text-sm border flex items-center justify-between transition-all ${
+                currentRule.operandCount === 3
+                  ? 'border-emerald-500 bg-emerald-50 text-emerald-800 shadow-sm ring-1 ring-emerald-500'
+                  : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
+              }`}
+            >
+              <div className="text-left">
+                <div className="font-extrabold">3개의 수</div>
+                <div className="text-[11px] text-slate-400 font-normal">A ○ B ○ C (세 수의 계산)</div>
+              </div>
+              {currentRule.operandCount === 3 && (
+                <Check className="w-4 h-4 text-emerald-600 stroke-[3]" />
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* 3. 자릿수 선택: 첫 번째 수 & 두 번째 수 (& 세 번째 수) */}
         <div className="pt-2 border-t border-slate-100">
           <label className="block text-sm font-bold text-slate-700 mb-3">
             자릿수 설정 <span className="text-xs text-slate-400 font-normal">(복수 선택 가능)</span>
           </label>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className={`grid grid-cols-1 ${currentRule.operandCount === 3 ? 'md:grid-cols-3' : 'md:grid-cols-2'} gap-4`}>
             {/* 첫 번째 수 (피연산자 A) 카드 */}
             <div className="p-4 rounded-xl border-2 border-emerald-500/25 bg-emerald-50/20 space-y-3">
               <div className="flex items-center justify-between pb-2 border-b border-emerald-100">
@@ -195,7 +250,7 @@ export function RuleEditor() {
                     두 번째 수
                   </span>
                   <span className="text-xs text-slate-400 font-normal">
-                    (뒤의 수 · 아랫수)
+                    (가운데 수)
                   </span>
                 </div>
                 <span className="text-[10px] font-bold text-indigo-700 bg-white px-2 py-0.5 rounded-full border border-indigo-200">
@@ -224,6 +279,49 @@ export function RuleEditor() {
                 })}
               </div>
             </div>
+
+            {/* 세 번째 수 (피연산자 C) 카드 */}
+            {currentRule.operandCount === 3 && (
+              <div className="p-4 rounded-xl border-2 border-violet-500/25 bg-violet-50/20 space-y-3">
+                <div className="flex items-center justify-between pb-2 border-b border-violet-100">
+                  <div className="flex items-center gap-2">
+                    <span className="w-5 h-5 rounded-full bg-violet-600 text-white text-xs font-black flex items-center justify-center shadow-xs">
+                      3
+                    </span>
+                    <span className="text-sm font-extrabold text-slate-800">
+                      세 번째 수
+                    </span>
+                    <span className="text-xs text-slate-400 font-normal">
+                      (마지막 수)
+                    </span>
+                  </div>
+                  <span className="text-[10px] font-bold text-violet-700 bg-white px-2 py-0.5 rounded-full border border-violet-200">
+                    피연산자 C
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  {[1, 2, 3, 4].map((digit) => {
+                    const active = (currentRule.operandC?.digits || currentRule.operandB.digits).includes(digit);
+                    return (
+                      <button
+                        key={digit}
+                        type="button"
+                        onClick={() => handleToggleDigit('C', digit)}
+                        className={`py-2.5 px-3 rounded-xl text-xs font-bold border flex items-center justify-between transition-all ${
+                          active
+                            ? 'border-violet-500 bg-white text-violet-800 shadow-sm ring-2 ring-violet-500/25'
+                            : 'border-slate-200 bg-white/70 text-slate-600 hover:bg-white hover:border-slate-300'
+                        }`}
+                      >
+                        <span>{digitLabels[digit]}</span>
+                        {active && <Check className="w-3.5 h-3.5 text-violet-600 stroke-[3]" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

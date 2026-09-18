@@ -12,6 +12,7 @@ import { generateDecimalProblem } from './decimalGenerator';
 import { generateMixedOpProblem } from './mixedOpGenerator';
 import { generateProportionProblem } from './proportionGenerator';
 import { generateFactorProblem } from './factorGenerator';
+import { generateThreeOperandProblem } from './threeOperandsGenerator';
 import { makeProblemKey, shuffle } from './utils';
 
 export interface GenerationResult {
@@ -61,6 +62,8 @@ export function generateWorksheet(rule: WorksheetRule): GenerationResult {
         created = generateProportionProblem(rule, i + 1, false);
       } else if (category === 'factors_multiples') {
         created = generateFactorProblem(rule, i + 1, false);
+      } else if (rule.operandCount === 3) {
+        created = generateThreeOperandProblem(rule, i + 1, false);
       } else {
         switch (op) {
           case 'addition':
