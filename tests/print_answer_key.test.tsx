@@ -3,6 +3,7 @@ import React from 'react';
 import { renderToString } from 'react-dom/server';
 import { PrintAnswerKey } from '../src/components/print/PrintAnswerKey';
 import { PrintWorksheet } from '../src/components/print/PrintWorksheet';
+import { A4Sheet } from '../src/components/print/A4Sheet';
 import { useWorksheetStore } from '../src/stores/worksheetStore';
 import { Problem, WorksheetRule } from '../src/domain/math/types';
 
@@ -92,6 +93,21 @@ describe('PrintAnswerKey 빠른 정답표 인쇄 컴포넌트 테스트', () => 
     expect(html).toContain('height:3mm');
     expect(html).toContain('linear-gradient');
     expect(html).toContain('print-color-adjust:exact');
+  });
+
+  it('A4Sheet 렌더링 시 정답표 영역이 최하단 고정(mt-auto) 클래스를 포함해야 함', () => {
+    const html = renderToString(
+      <A4Sheet
+        answerKey={
+          <PrintAnswerKey rule={dummyRule} problems={dummyProblems.slice(0, 10)} />
+        }
+      >
+        <PrintWorksheet rule={dummyRule} problems={dummyProblems.slice(0, 10)} />
+      </A4Sheet>
+    );
+
+    expect(html).toContain('a4-answer-section');
+    expect(html).toContain('mt-auto');
   });
 });
 

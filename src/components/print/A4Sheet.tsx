@@ -50,7 +50,8 @@ export function A4Sheet({ children, fit = false, answerKey }: {
         ? Math.min(1, availableHeight / content.scrollHeight, availableWidth / requiredWidth)
         : 1;
       content.style.zoom = String(scale);
-      content.style.height = fit ? `${availableHeight / scale}px` : 'auto';
+      content.style.height = fit ? `${availableHeight / scale}px` : '100%';
+      content.style.minHeight = fit ? `${availableHeight / scale}px` : `${availableHeight}px`;
     };
 
     fitContent();
@@ -62,7 +63,11 @@ export function A4Sheet({ children, fit = false, answerKey }: {
     };
   }, [children, fit, answerKey, separateAnswer]);
 
-  const answer = answerKey ? <div ref={answerRef} className="a4-answer-section">{answerKey}</div> : null;
+  const answer = answerKey ? (
+    <div ref={answerRef} className="a4-answer-section w-full mt-auto">
+      {answerKey}
+    </div>
+  ) : null;
 
   return (
     <>

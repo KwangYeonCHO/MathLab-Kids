@@ -147,13 +147,22 @@ export function VerticalProblem({
     return 'text-lg sm:text-xl';
   };
 
+  // 3개 수 연산 시: 두 연산이 모두 덧셈인 경우 2번째 줄 연산 기호 생략(교과서 표준 덧셈),
+  // 그 외(뺄셈 또는 혼합 연산)인 경우 연산 모호성을 원천 차단하기 위해 2번째 줄에도 연산 기호 표시
+  const showOp1 =
+    operandC === undefined ||
+    !(operation === 'addition' && (operation2 === 'addition' || operation2 === undefined));
+
   return (
     <div
       className={`inline-block ${cardPadding} bg-white rounded-xl border border-slate-200 shadow-xs paper:border-0 paper:shadow-none paper:bg-transparent text-slate-800`}
     >
       <div className={`flex flex-col items-end math-font ${fontClass} paper:leading-tight font-bold select-none`}>
         {/* 윗수 (피연산자 A) */}
-        <div className="flex justify-end gap-1 sm:gap-1.5 paper:gap-1 pr-1">
+        <div className="flex items-center justify-end gap-1 sm:gap-1.5 paper:gap-1 pr-1">
+          <span className="font-extrabold mr-1 sm:mr-2 paper:mr-2 opacity-0 select-none pointer-events-none" aria-hidden="true">
+            +
+          </span>
           {digitsA.map((d, i) => (
             <span key={i} className={colWidthClass}>
               {d === ' ' ? '' : d}
@@ -162,27 +171,22 @@ export function VerticalProblem({
         </div>
 
         {/* 두 번째 수 (피연산자 B) */}
-        {operandC !== undefined ? (
-          <div className="flex justify-end gap-1 sm:gap-1.5 paper:gap-1 mt-0.5 sm:mt-1 paper:mt-1 pr-1">
-            {digitsB.map((d, i) => (
-              <span key={i} className={colWidthClass}>
-                {d === ' ' ? '' : d}
-              </span>
-            ))}
-          </div>
-        ) : (
-          /* 2개 수 연산 시: 연산 기호 + 피연산자 B */
-          <div className="flex items-center justify-end gap-1 sm:gap-1.5 paper:gap-1 mt-0.5 sm:mt-1 paper:mt-1 pr-1">
+        <div className="flex items-center justify-end gap-1 sm:gap-1.5 paper:gap-1 mt-0.5 sm:mt-1 paper:mt-1 pr-1">
+          {showOp1 ? (
             <span className="font-extrabold text-emerald-600 paper:text-slate-900 mr-1 sm:mr-2 paper:mr-2">
               {opSymbol}
             </span>
-            {digitsB.map((d, i) => (
-              <span key={i} className={colWidthClass}>
-                {d === ' ' ? '' : d}
-              </span>
-            ))}
-          </div>
-        )}
+          ) : (
+            <span className="font-extrabold mr-1 sm:mr-2 paper:mr-2 opacity-0 select-none pointer-events-none" aria-hidden="true">
+              +
+            </span>
+          )}
+          {digitsB.map((d, i) => (
+            <span key={i} className={colWidthClass}>
+              {d === ' ' ? '' : d}
+            </span>
+          ))}
+        </div>
 
         {/* 세 번째 수 (피연산자 C) - 3연산자일 때만 렌더링 (마지막 줄에 연산 기호 부착) */}
         {operandC !== undefined && (
@@ -205,10 +209,13 @@ export function VerticalProblem({
         <div className={`w-full flex justify-end items-center ${answerHeight}`}>
           {shouldShowAnswer ? (
             <div
-              className={`flex justify-end gap-1 sm:gap-1.5 paper:gap-1 pr-1 ${
+              className={`flex items-center justify-end gap-1 sm:gap-1.5 paper:gap-1 pr-1 ${
                 isExample ? 'text-emerald-600 font-black' : 'text-slate-900 font-black'
               }`}
             >
+              <span className="font-extrabold mr-1 sm:mr-2 paper:mr-2 opacity-0 select-none pointer-events-none" aria-hidden="true">
+                +
+              </span>
               {padDigits(answer.toString(), maxDigits).map((d, i) => (
                 <span key={i} className={colWidthClass}>
                   {d === ' ' ? '' : d}

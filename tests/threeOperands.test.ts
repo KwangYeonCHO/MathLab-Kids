@@ -240,4 +240,35 @@ describe('세 수의 사칙연산 연산 엔진 무결점 검증 (Three Operands
       });
     }
   });
+
+  it('세 수 연산에서 세로셈(vertical) 출제 시 뺄셈/혼합 포함 전 문항이 세로셈(vertical)으로 생성되어야 함 (가로셈 혼합 방지)', () => {
+    const rule: WorksheetRule = {
+      schemaVersion: 1,
+      title: '세 수의 세로셈 덧셈·뺄셈',
+      operations: ['addition', 'subtraction'],
+      category: 'arithmetic',
+      operandCount: 3,
+      count: 30,
+      operandA: { digits: [1] },
+      operandB: { digits: [1] },
+      operandC: { digits: [1] },
+      carryCondition: 'any',
+      borrowCondition: 'any',
+      divisionCondition: 'none',
+      allowNegative: false,
+      allowZero: false,
+      uniqueMode: 'exact',
+      displayFormat: 'vertical',
+      showFirstExample: true,
+    };
+
+    const res = generateWorksheet(rule);
+    expect(res.success).toBe(true);
+    expect(res.problems.length).toBe(30);
+
+    // 단 한 문항도 가로셈으로 강제 전환되거나 혼합되지 않아야 함
+    res.problems.forEach((p) => {
+      expect(p.displayFormat).toBe('vertical');
+    });
+  });
 });

@@ -77,14 +77,32 @@ body {
   background: white;
   box-shadow: 0 8px 24px #0f172a20;
 }
-.a4-sheet-area { min-height: 273mm; }
+.a4-sheet-area {
+  min-height: 273mm;
+  display: flex;
+  flex-direction: column;
+}
 .a4-sheet-fit .a4-sheet-area { height: 273mm; }
-.a4-sheet-content, .a4-page-worksheet { display: flex; flex-direction: column; }
-.a4-page-worksheet { flex: 1; }
+.a4-sheet-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 273mm;
+  height: 100%;
+}
+.a4-page-worksheet {
+  display: flex;
+  flex-direction: column;
+}
 .a4-page-worksheet > :not(.worksheet-grid) { flex-shrink: 0; }
-/* 남은 높이를 문제 행에 균등 분할하여 풀이 공간 확보; 초과 시 A4Sheet에서 전체 축소 조절 */
-.worksheet-grid { flex: 1; grid-auto-rows: 1fr; }
-.a4-answer-section { flex-shrink: 0; padding-top: 4mm; }
+/* 문제 그리드 */
+.worksheet-grid { grid-auto-rows: auto; }
+/* 빠른 정답표 섹션: 문제 개수가 적더라도 중간에 뜨지 않고 A4 페이지 최하단에 항상 밀착 배치 */
+.a4-answer-section {
+  flex-shrink: 0;
+  margin-top: auto !important;
+  padding-top: 4mm;
+}
 .a4-answer-key { break-inside: avoid; }
 
 @media print {

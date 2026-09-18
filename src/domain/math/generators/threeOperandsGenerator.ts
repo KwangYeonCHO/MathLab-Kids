@@ -206,11 +206,11 @@ export function generateThreeOperandProblem(
     if (rule.operandB.allowZeroEnding === false && b % 10 === 0) continue;
     if (rule.operandC?.allowZeroEnding === false && c % 10 === 0) continue;
 
-    // 세로셈 형식 결정: 세 수의 덧셈(+ +)인 경우에만 3단 세로셈 지원, 그 외는 가로셈으로 렌더링
+    // 표시 형식 결정 (혼합 선택 시 50% 확률 분배, 그 외는 규칙의 형식 준수)
     const displayFormat =
-      rule.displayFormat === 'vertical' && op1 === 'addition' && op2 === 'addition'
-        ? 'vertical'
-        : 'horizontal';
+      rule.displayFormat === 'mixed'
+        ? Math.random() < 0.5 ? 'horizontal' : 'vertical'
+        : (rule.displayFormat || 'horizontal');
 
     return {
       id: `three-${index}-${op1}-${op2}-${a}-${b}-${c}`,
