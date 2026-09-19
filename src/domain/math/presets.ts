@@ -352,7 +352,7 @@ export const GRADE_PRESETS: PresetItem[] = [
       allowNegative: false,
       allowZero: false,
       uniqueMode: 'exact',
-      displayFormat: 'vertical',
+      displayFormat: 'horizontal',
       showFirstExample: true,
     },
   },

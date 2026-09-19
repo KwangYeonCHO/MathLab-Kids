@@ -93,6 +93,16 @@ export function FractionProblem({
     : 'w-12 h-6 sm:w-14 sm:h-7 text-sm';
 
   const renderFractionDisplay = (f: FractionValue, isHighlight: boolean = false) => {
+    // 분자가 0인 경우 (자연수 또는 0으로 떨어지는 경우 0/1 표기 방지)
+    if (f.numerator === 0) {
+      const val = f.whole && f.whole > 0 ? f.whole : 0;
+      return (
+        <span className={`${wholeFontSize} ${isHighlight ? 'text-emerald-700 font-extrabold' : 'text-slate-800 font-bold'}`}>
+          {val}
+        </span>
+      );
+    }
+
     return (
       <div className={`inline-flex items-center gap-0.5 ${isHighlight ? 'text-emerald-700 font-extrabold' : 'text-slate-800 font-bold'}`}>
         {f.whole && f.whole > 0 ? (
@@ -129,14 +139,20 @@ export function FractionProblem({
       ) : isReadOnly ? (
         /* 인쇄 학습지용 빈 분수 답안 박스 */
         <div className="inline-flex items-center gap-1">
-          {fAns.whole && fAns.whole > 0 ? (
-            <div className={`${boxSize} border-2 border-slate-300 rounded bg-white`} />
-          ) : null}
-          <div className="inline-flex flex-col items-center gap-0.5">
-            <div className={`${boxSize} border-2 border-slate-300 rounded bg-white`} />
-            <div className="w-full h-[1.5px] bg-slate-400" />
-            <div className={`${boxSize} border-2 border-slate-300 rounded bg-white`} />
-          </div>
+          {fAns.numerator === 0 ? (
+            /* 자연수로 나누어떨어지는 경우 단일 자연수 답안 박스 */
+            <div className={`${wholeBoxSize} border-2 border-slate-300 rounded bg-white`} />
+          ) : (
+            /* 일반 분수 답안: 대분수와 진분수 간 정답 형태 유출 방지를 위해 표준 자연수 안내 박스 제공 */
+            <>
+              <div className={`${wholeBoxSize} border-2 border-slate-300 rounded bg-white`} />
+              <div className="inline-flex flex-col items-center gap-0.5">
+                <div className={`${boxSize} border-2 border-slate-300 rounded bg-white`} />
+                <div className="w-full h-[1.5px] bg-slate-400" />
+                <div className={`${boxSize} border-2 border-slate-300 rounded bg-white`} />
+              </div>
+            </>
+          )}
         </div>
       ) : (
         /* 온라인 풀기용 분수 입력 인터페이스 */

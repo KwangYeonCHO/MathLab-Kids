@@ -98,7 +98,8 @@ export function generateDecimalProblem(
     operandB: opB,
     answer,
     remainder,
+    // 소수 나눗셈(특히 몫과 나머지)은 세로셈 표기를 지원하지 않으므로 가로셈(horizontal)으로 강제
+    displayFormat: operation === 'division' ? 'horizontal' : (rule.displayFormat === 'vertical' ? 'vertical' : 'horizontal'),
     isExample,
-    displayFormat: rule.displayFormat === 'vertical' ? 'vertical' : 'horizontal',
   };
 }

@@ -341,5 +341,38 @@ describe('세 수의 사칙연산 연산 엔진 무결점 검증 (Three Operands
       // 미지원 규칙이므로 2로 유지되어야 함
       expect(updatedRule.operandCount).toBe(2);
     });
+
+    it('세 수의 연산에서 곱셈/나눗셈 또는 연산자 혼합 시 세로셈(vertical) 규칙이어도 가로셈(horizontal)으로 강제되어야 함', () => {
+      const mixedThreeRule: WorksheetRule = {
+        schemaVersion: 1,
+        title: '세 수의 사칙연산 혼합',
+        operations: ['addition', 'multiplication'],
+        operandCount: 3,
+        count: 20,
+        operandA: { digits: [1] },
+        operandB: { digits: [1] },
+        operandC: { digits: [1] },
+        carryCondition: 'any',
+        borrowCondition: 'any',
+        divisionCondition: 'none',
+        allowNegative: false,
+        allowZero: false,
+        uniqueMode: 'exact',
+        displayFormat: 'vertical', // 세로셈 지정
+        showFirstExample: true,
+      };
+
+      const result = generateWorksheet(mixedThreeRule);
+      expect(result.success).toBe(true);
+
+      result.problems.forEach((p) => {
+        const isPureAdd = p.operation === 'addition' && p.operation2 === 'addition';
+        if (!isPureAdd) {
+          // 곱셈이 포함되거나 혼합된 경우 반드시 가로셈이어야 함
+          expect(p.displayFormat).toBe('horizontal');
+        }
+      });
+    });
   });
 });
+

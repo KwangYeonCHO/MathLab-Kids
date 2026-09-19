@@ -68,9 +68,8 @@ export function generateDivisionProblem(
     if (Math.floor(a / b) !== q || a % b !== r) continue;
     if (needRemainder && (r <= 0 || r >= b)) continue;
 
-    const displayFormat = rule.displayFormat === 'mixed'
-      ? (Math.random() > 0.5 ? 'horizontal' : 'vertical')
-      : rule.displayFormat;
+    // 나눗셈은 몫과 나머지를 명확히 표현하고 입력받기 위해 가로셈(horizontal)으로 통일
+    const displayFormat = 'horizontal';
 
     return {
       id: `div-${index}-${a}-${b}`,

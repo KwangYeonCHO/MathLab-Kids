@@ -78,6 +78,37 @@ export function UniversalProblem(props: UniversalProblemProps) {
     return <FactorProblem {...props} autoFocus={props.autoFocus} />;
   }
 
+  // 1. 나눗셈은 세로셈(VerticalProblem)에서 몫/나머지 입력 및 표시를 지원하지 않으므로 가로셈으로 안전하게 렌더링
+  if (problem.operation === 'division') {
+    return (
+      <HorizontalProblem
+        {...props}
+        autoFocus={props.autoFocus}
+        activeInputType={props.activeInputType}
+        onFocusAnswer={handleFocusAnswer}
+        onFocusRemainder={handleFocusRemainder}
+      />
+    );
+  }
+
+  // 2. 세 수의 연산 중 곱셈이나 나눗셈이 포함된 경우는 연산자 우선순위 모호성 방지를 위해 가로셈 강제
+  if (problem.operandC !== undefined && problem.displayFormat === 'vertical') {
+    const isAddSubOnly =
+      (problem.operation === 'addition' || problem.operation === 'subtraction') &&
+      (problem.operation2 === 'addition' || problem.operation2 === 'subtraction' || problem.operation2 === undefined);
+    if (!isAddSubOnly) {
+      return (
+        <HorizontalProblem
+          {...props}
+          autoFocus={props.autoFocus}
+          activeInputType={props.activeInputType}
+          onFocusAnswer={handleFocusAnswer}
+          onFocusRemainder={handleFocusRemainder}
+        />
+      );
+    }
+  }
+
   if (problem.displayFormat === 'vertical') {
     return <VerticalProblem {...props} autoFocus={props.autoFocus} />;
   }

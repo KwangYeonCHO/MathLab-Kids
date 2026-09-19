@@ -288,13 +288,31 @@ export default function PracticePage() {
 
     // 현재 문제 입력값 확인
     if (currentProblem.category === 'fraction') {
-      if (
-        !curAns?.fractionAnswer ||
-        curAns.fractionAnswer.numerator === undefined ||
-        !curAns.fractionAnswer.denominator
-      ) {
-        alert('분수 답(분자와 분모)을 입력해 주세요.');
+      const frac = curAns?.fractionAnswer;
+      const hasWholeOnly =
+        frac?.whole !== undefined &&
+        frac?.whole !== null &&
+        (!frac.numerator || frac.numerator === 0);
+      const hasFrac = Boolean(
+        frac &&
+        frac.numerator !== undefined &&
+        frac.numerator !== null &&
+        frac.denominator &&
+        frac.denominator > 0
+      );
+
+      if (!hasWholeOnly && !hasFrac) {
+        alert('답(자연수 또는 분수)을 입력해 주세요.');
         return;
+      }
+
+      // 자연수만 입력된 경우 분자 0, 분모 1로 정규화하여 저장
+      if (hasWholeOnly && (!frac?.denominator || frac.denominator === 0)) {
+        setUserAnswer(currentProblem.id, undefined, undefined, {
+          whole: frac.whole,
+          numerator: 0,
+          denominator: 1,
+        });
       }
     } else {
       if (curAns?.answer === null || curAns?.answer === undefined) {

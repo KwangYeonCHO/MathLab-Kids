@@ -14,6 +14,7 @@ import {
   formatFraction,
   parseFractionString,
 } from '../src/domain/math/core/fraction';
+import { evaluateProblemAnswer } from '../src/stores/worksheetStore';
 
 describe('분수(Fraction) 코어 수학 엔진 단위 테스트', () => {
   describe('최대공약수(GCD) 및 최소공배수(LCM)', () => {
@@ -156,6 +157,7 @@ describe('분수(Fraction) 코어 수학 엔진 단위 테스트', () => {
       expect(formatFraction({ whole: 2, numerator: 1, denominator: 3 })).toBe('2 1/3');
       expect(formatFraction({ numerator: 3, denominator: 4 })).toBe('3/4');
       expect(formatFraction({ whole: 5, numerator: 0, denominator: 1 })).toBe('5');
+      expect(formatFraction({ whole: 0, numerator: 0, denominator: 1 })).toBe('0');
     });
 
     it('사용자 입력을 정확한 분수 객체로 파싱해야 함', () => {
@@ -163,6 +165,38 @@ describe('분수(Fraction) 코어 수학 엔진 단위 테스트', () => {
       expect(parseFractionString('3/4')).toEqual({ numerator: 3, denominator: 4 });
       expect(parseFractionString('7')).toEqual({ whole: 7, numerator: 0, denominator: 1 });
       expect(parseFractionString('')).toBeNull();
+    });
+  });
+
+  describe('정수형 분수 결과 및 온라인 채점 정합성 검증', () => {
+    it('자연수로 나누어떨어지는 분수 덧셈 결과는 자연수 분수로 약분되어야 함', () => {
+      // 3/5 + 2/5 = 5/5 = 1
+      const res = addFractions({ numerator: 3, denominator: 5 }, { numerator: 2, denominator: 5 });
+      expect(res).toEqual({ whole: 1, numerator: 0, denominator: 1 });
+      expect(formatFraction(res)).toBe('1');
+    });
+
+    it('자연수로 떨어지는 분수 문제에 대해 학생이 자연수만 입력({ whole: 1 })해도 정답으로 인정되어야 함', () => {
+      const prob = {
+        id: 'test_frac_1',
+        index: 1,
+        operation: 'addition',
+        category: 'fraction',
+        operandA: 0,
+        operandB: 0,
+        answer: 1,
+        fractionA: { numerator: 3, denominator: 5 },
+        fractionB: { numerator: 2, denominator: 5 },
+        fractionAnswer: { whole: 1, numerator: 0, denominator: 1 },
+      };
+
+      // 학생이 whole만 입력하고 분자/분모는 비워둔 경우
+      const userAns = {
+        problemId: 'test_frac_1',
+        fractionAnswer: { whole: 1 },
+      };
+
+      expect(evaluateProblemAnswer(prob, userAns)).toBe(true);
     });
   });
 });

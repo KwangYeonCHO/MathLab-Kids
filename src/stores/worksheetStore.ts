@@ -88,7 +88,15 @@ export function evaluateProblemAnswer(prob: Problem, userAns?: UserAnswer): bool
 
   if (prob.category === 'fraction') {
     if (!userAns.fractionAnswer || !prob.fractionAnswer) return false;
-    return isEquivalent(userAns.fractionAnswer, prob.fractionAnswer) && isSimplestForm(userAns.fractionAnswer);
+    const normalizedUserFrac: FractionValue = {
+      whole: userAns.fractionAnswer.whole,
+      numerator: userAns.fractionAnswer.numerator ?? 0,
+      denominator:
+        userAns.fractionAnswer.denominator && userAns.fractionAnswer.denominator > 0
+          ? userAns.fractionAnswer.denominator
+          : 1,
+    };
+    return isEquivalent(normalizedUserFrac, prob.fractionAnswer) && isSimplestForm(normalizedUserFrac);
   }
 
   if (prob.category === 'decimal') {

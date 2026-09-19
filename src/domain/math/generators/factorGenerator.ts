@@ -21,17 +21,24 @@ export function generateFactorProblem(
   const isGcd = fRule.type === 'gcd';
   const maxNum = fRule.maxNumber || 50;
 
+  const effectiveMax = Math.max(12, maxNum);
+  const maxCommon = Math.max(2, Math.floor(effectiveMax / 3));
+
   // 최대공약수가 1보다 큰 흥미로운 두 수 생성
-  for (let attempt = 0; attempt < 30; attempt++) {
-    const common = getRandomInt(2, 12);
-    const m = getRandomInt(2, 8);
-    let n = getRandomInt(2, 8);
-    if (m === n) n = m + 1;
+  for (let attempt = 0; attempt < 50; attempt++) {
+    const common = getRandomInt(2, Math.min(12, maxCommon));
+    const maxMultiplier = Math.max(3, Math.floor(effectiveMax / common));
+    const m = getRandomInt(2, Math.min(8, maxMultiplier));
+    let n = getRandomInt(2, Math.min(8, maxMultiplier));
+    if (m === n) {
+      n = m < maxMultiplier ? m + 1 : m - 1;
+    }
+    if (n < 2) continue;
 
     const numA = common * m;
     const numB = common * n;
 
-    if (numA <= maxNum && numB <= maxNum && numA !== numB) {
+    if (numA <= effectiveMax && numB <= effectiveMax && numA !== numB) {
       const answer = isGcd ? gcd(numA, numB) : lcm(numA, numB);
 
       return {

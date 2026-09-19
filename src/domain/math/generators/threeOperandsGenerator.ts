@@ -240,11 +240,18 @@ export function generateThreeOperandProblem(
     if (rule.operandB.allowZeroEnding === false && b % 10 === 0) continue;
     if (rule.operandC?.allowZeroEnding === false && c % 10 === 0) continue;
 
-    // 표시 형식 결정 (혼합 선택 시 50% 확률 분배, 그 외는 규칙의 형식 준수)
+    // 2022 개정 초등 수학 교육과정 기준:
+    // 세 수의 세로셈(vertical)은 연산자 우선순위 혼선이 없는 덧셈과 뺄셈에 적용 (동일 우선순위로 위에서 아래로 순차 계산)
+    // 곱셈, 나눗셈이 포함된 경우에는 계산 순서 명확성을 위해 반드시 가로셈(horizontal) 강제
+    const isAddSubOnly =
+      (op1 === 'addition' || op1 === 'subtraction') &&
+      (op2 === 'addition' || op2 === 'subtraction');
     const displayFormat =
-      rule.displayFormat === 'mixed'
+      isAddSubOnly && rule.displayFormat === 'vertical'
+        ? 'vertical'
+        : isAddSubOnly && rule.displayFormat === 'mixed'
         ? Math.random() < 0.5 ? 'horizontal' : 'vertical'
-        : (rule.displayFormat || 'horizontal');
+        : 'horizontal';
 
     return {
       id: `three-${index}-${op1}-${op2}-${a}-${b}-${c}`,

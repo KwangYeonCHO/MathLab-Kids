@@ -267,5 +267,31 @@ describe('10,000회 대량 무결성 스트레스 테스트 (매뉴얼 26.2)', (
         }
       });
     });
+
+    it('나눗셈 문제는 규칙에 세로셈(vertical)이나 혼합(mixed)이 지정되어도 항상 가로셈(horizontal)으로 생성되어야 함', () => {
+      const divVerticalRule: WorksheetRule = {
+        schemaVersion: 1,
+        title: '나눗셈 세로셈 방어 테스트',
+        operations: ['division'],
+        count: 10,
+        operandA: { digits: [2] },
+        operandB: { digits: [1] },
+        carryCondition: 'none',
+        borrowCondition: 'none',
+        divisionCondition: 'mixed',
+        allowNegative: false,
+        allowZero: false,
+        uniqueMode: 'exact',
+        displayFormat: 'vertical',
+        showFirstExample: true,
+      };
+
+      const res = generateWorksheet(divVerticalRule);
+      expect(res.success).toBe(true);
+      res.problems.forEach((p) => {
+        expect(p.operation).toBe('division');
+        expect(p.displayFormat).toBe('horizontal');
+      });
+    });
   });
 });
