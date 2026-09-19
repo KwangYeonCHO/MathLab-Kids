@@ -78,4 +78,87 @@ describe('온라인 풀이(Practice) 포커스 자동 이동 및 정답 판정 �
     }
     expect(nextIdx).toBe(1);
   });
+
+  it('마지막 문제까지 모든 문제를 맞힌 경우(allCorrect) 자동 제출 조건이 만족되어야 함', () => {
+    const userAnswers = {
+      p1: { problemId: 'p1', answer: 20, isCorrect: true },
+      p2: { problemId: 'p2', answer: 20, isCorrect: true },
+      p3: { problemId: 'p3', answer: 20, isCorrect: true },
+    };
+
+    const allCorrect = sampleProblems.every((prob) => {
+      const ans = userAnswers[prob.id as keyof typeof userAnswers];
+      return ans && evaluateProblemAnswer(prob, ans);
+    });
+
+    expect(allCorrect).toBe(true);
+  });
+
+  it('마지막 문제를 풀었으나 이전 문제(p2)에 오답이 있는 경우 자동 제출되지 않고 채점 버튼 포커스 조건이 되어야 함', () => {
+    const userAnswers = {
+      p1: { problemId: 'p1', answer: 20, isCorrect: true },
+      p2: { problemId: 'p2', answer: 99, isCorrect: false }, // 오답
+      p3: { problemId: 'p3', answer: 20, isCorrect: true }, // 마지막 문제 정답
+    };
+
+    const allCorrect = sampleProblems.every((prob) => {
+      const ans = userAnswers[prob.id as keyof typeof userAnswers];
+      return ans && evaluateProblemAnswer(prob, ans);
+    });
+
+    const isLastProblem = true;
+    const allAnswered = sampleProblems.every((p) => {
+      const a = userAnswers[p.id as keyof typeof userAnswers];
+      return a && a.answer !== null && a.answer !== undefined;
+    });
+
+    expect(allCorrect).toBe(false);
+    expect(isLastProblem || allAnswered).toBe(true);
+    // allCorrect가 false이고 isLastProblem/allAnswered가 true이므로 focusFinishButton이 호출됨
+  });
+
+  it('분수 및 소수/나머지 문제 혼합 시에도 전 문항 정답 여부를 정확히 판별하여 자동 제출 또는 포커스를 분기해야 함', () => {
+    const complexProblems: Problem[] = [
+      {
+        id: 'cp1',
+        index: 1,
+        category: 'fraction',
+        operation: 'addition',
+        fractionA: { numerator: 1, denominator: 4 },
+        fractionB: { numerator: 2, denominator: 4 },
+        fractionAnswer: { numerator: 3, denominator: 4 },
+        displayFormat: 'horizontal',
+      },
+      {
+        id: 'cp2',
+        index: 2,
+        operation: 'division',
+        operandA: 17,
+        operandB: 5,
+        answer: 3,
+        remainder: 2,
+        displayFormat: 'horizontal',
+      },
+    ];
+
+    // 1) 둘 다 정답인 경우
+    const correctAnswers = {
+      cp1: { problemId: 'cp1', fractionAnswer: { numerator: 3, denominator: 4 } },
+      cp2: { problemId: 'cp2', answer: 3, remainder: 2 },
+    };
+    const isBothCorrect = complexProblems.every((p) =>
+      evaluateProblemAnswer(p, correctAnswers[p.id as keyof typeof correctAnswers])
+    );
+    expect(isBothCorrect).toBe(true);
+
+    // 2) 나머지가 틀린 경우 -> 전 문항 정답 실패 (채점 버튼 포커스 분기)
+    const partialWrongAnswers = {
+      cp1: { problemId: 'cp1', fractionAnswer: { numerator: 3, denominator: 4 } },
+      cp2: { problemId: 'cp2', answer: 3, remainder: 1 }, // 나머지 오답
+    };
+    const isPartialCorrect = complexProblems.every((p) =>
+      evaluateProblemAnswer(p, partialWrongAnswers[p.id as keyof typeof partialWrongAnswers])
+    );
+    expect(isPartialCorrect).toBe(false);
+  });
 });

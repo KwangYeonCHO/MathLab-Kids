@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useWorksheetStore, evaluateProblemAnswer } from '@/stores/worksheetStore';
 import { UniversalProblem } from '@/components/problem-view/UniversalProblem';
+import { Problem, UserAnswer } from '@/domain/math/types';
 import { FractionValue } from '@/domain/math/core/fraction';
 import { ChildKeypad } from '@/components/keypad/ChildKeypad';
 import { playCorrectSound, playIncorrectSound } from '@/utils/sound';
@@ -38,6 +39,10 @@ export default function PracticePage() {
   // 그리드 모드에서 현재 포커스 대상인 문제의 인덱스
   const [focusedGridIndex, setFocusedGridIndex] = useState<number>(0);
   const gridCardRefs = useRef<Record<number, HTMLDivElement | null>>({});
+  const gridFinishButtonRef = useRef<HTMLButtonElement>(null);
+  const desktopFinishButtonRef = useRef<HTMLButtonElement>(null);
+  const mobileFinishButtonRef = useRef<HTMLButtonElement>(null);
+  const isSubmittingRef = useRef(false);
 
   // 첫 번째 미작성 또는 미정답 문제의 인덱스 검색 (기본 1번, 풀이 중이면 해당 문제로 이동)
   const getNextPendingProblemIndex = (startIndex: number = 0): number => {
@@ -54,6 +59,58 @@ export default function PracticePage() {
       if (!isCorrect(problems[i])) return i;
     }
     return Math.min(startIndex, problems.length - 1);
+  };
+
+  // 모든 문제가 올바르게 풀렸는지 검사
+  const areAllProblemsCorrect = (answersMap: Record<string, UserAnswer>): boolean => {
+    if (!problems || problems.length === 0) return false;
+    return problems.every((prob) => {
+      const userAns = answersMap[prob.id];
+      if (!userAns) return false;
+      return evaluateProblemAnswer(prob, userAns);
+    });
+  };
+
+  // 모든 문제의 답이 입력(시도)되었는지 검사
+  const areAllProblemsAnswered = (answersMap: Record<string, UserAnswer>): boolean => {
+    if (!problems || problems.length === 0) return false;
+    return problems.every((p) => {
+      const a = answersMap[p.id];
+      if (!a) return false;
+      if (p.category === 'fraction') {
+        return Boolean(a.fractionAnswer && a.fractionAnswer.numerator !== undefined && a.fractionAnswer.denominator);
+      }
+      return a.answer !== null && a.answer !== undefined && !isNaN(Number(a.answer));
+    });
+  };
+
+  // 채점/제출 버튼으로 포커스 이동 및 화면 중앙 스크롤
+  const focusFinishButton = () => {
+    setTimeout(() => {
+      if (practiceViewMode === 'grid') {
+        if (gridFinishButtonRef.current) {
+          gridFinishButtonRef.current.focus();
+          gridFinishButtonRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      } else {
+        const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+        const targetBtn = isMobile
+          ? (mobileFinishButtonRef.current || desktopFinishButtonRef.current)
+          : (desktopFinishButtonRef.current || mobileFinishButtonRef.current);
+        if (targetBtn) {
+          targetBtn.focus();
+          targetBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }
+    }, 60);
+  };
+
+  // 모든 문제를 맞혔을 때 자동 채점 및 결과 페이지 이동
+  const autoFinishPractice = async () => {
+    if (isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
+    await finishPractice();
+    router.push('/result');
   };
 
   // 문제 세트가 없으면 기본 문제 자동 생성
@@ -339,9 +396,25 @@ export default function PracticePage() {
         setFeedback('incorrect');
       }
 
+      const updatedAnswers = useWorksheetStore.getState().userAnswers;
+      const allCorrect = areAllProblemsCorrect(updatedAnswers);
+      const isLastProblem = currentIndex === problems.length - 1;
+      const allAnswered = areAllProblemsAnswered(updatedAnswers);
+
+      if (allCorrect) {
+        // 마지막 문제까지 모두 맞혔거나 모든 문제가 정답인 경우 자동 채점 및 결과 이동
+        setTimeout(async () => {
+          await autoFinishPractice();
+        }, 600);
+        return;
+      }
+
       setTimeout(() => {
         setFeedback(null);
-        if (currentIndex < problems.length - 1) {
+        if (isLastProblem || allAnswered) {
+          // 마지막 문제이거나 모든 문제를 푼 상태에서 오답이 남아있는 경우 제출 버튼으로 포커스 이동
+          focusFinishButton();
+        } else {
           const nextIdx = getNextPendingProblemIndex(currentIndex + 1);
           setCurrentIndex(nextIdx);
           if (problems[nextIdx]?.category === 'fraction') {
@@ -353,13 +426,25 @@ export default function PracticePage() {
         }
       }, 600);
     } else {
-      if (currentIndex < problems.length - 1) {
-        nextProblem();
-        if (problems[currentIndex + 1]?.category === 'fraction') {
-          setActiveInputType('num');
-          setActiveFractionPart('num');
-        } else {
-          setActiveInputType('answer');
+      // 즉시 채점 꺼짐 모드
+      const currentAnswers = useWorksheetStore.getState().userAnswers;
+      const allCorrect = areAllProblemsCorrect(currentAnswers);
+      const isLastProblem = currentIndex === problems.length - 1;
+      const allAnswered = areAllProblemsAnswered(currentAnswers);
+
+      if (allCorrect) {
+        autoFinishPractice();
+      } else if (isLastProblem || allAnswered) {
+        focusFinishButton();
+      } else {
+        if (currentIndex < problems.length - 1) {
+          nextProblem();
+          if (problems[currentIndex + 1]?.category === 'fraction') {
+            setActiveInputType('num');
+            setActiveFractionPart('num');
+          } else {
+            setActiveInputType('answer');
+          }
         }
       }
     }
@@ -383,11 +468,13 @@ export default function PracticePage() {
         } else {
           setActiveInputType('answer');
         }
+      } else {
+        focusFinishButton();
       }
     }
   };
 
-  // 그리드 모드에서 정답 작성 시 다음 미정답 문제 입력칸으로 자동 커서 이동
+  // 그리드 모드에서 정답 작성 시 다음 미정답 문제 입력칸으로 자동 커서 이동 및 마지막 문제 시 자동 채점/포커스
   const advanceGridIfCorrect = (problem: (typeof problems)[0], updatedAns: (typeof userAnswers)[string], idx: number) => {
     if (!isImmediateGrading) return;
     const isProbCorrect = evaluateProblemAnswer(problem, updatedAns);
@@ -406,11 +493,25 @@ export default function PracticePage() {
           setFocusedGridIndex(nextIdx);
           gridCardRefs.current[nextIdx]?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }, 120);
+      } else {
+        // idx + 1 이후로 남은 문제가 없거나 마지막 문제를 푼 경우
+        const allCorrect = areAllProblemsCorrect(nextAnswers);
+        if (allCorrect) {
+          // 모든 문제가 정답인 경우: 자동 제출 및 채점
+          setTimeout(async () => {
+            await autoFinishPractice();
+          }, 350);
+        } else {
+          // 마지막 문제이거나 더 이상 진행할 뒤쪽 문제가 없지만 이전 문제 중 오답/미작성이 존재하는 경우:
+          // 제출 버튼으로 포커스 이동
+          focusFinishButton();
+        }
       }
     }
   };
 
   const handleFinishAll = async () => {
+    if (isSubmittingRef.current) return;
     const state = useWorksheetStore.getState();
     const unanswered = state.problems.filter((p) => {
       const a = state.userAnswers[p.id];
@@ -427,6 +528,7 @@ export default function PracticePage() {
       if (!confirmSubmit) return;
     }
 
+    isSubmittingRef.current = true;
     await finishPractice();
     router.push('/result');
   };
@@ -738,9 +840,10 @@ export default function PracticePage() {
 
               {/* 완료 및 채점하기 버튼 (데스크톱) */}
               <button
+                ref={desktopFinishButtonRef}
                 type="button"
                 onClick={handleFinishAll}
-                className="w-full py-3.5 rounded-xl bg-slate-900 hover:bg-slate-800 active:bg-black text-white text-base font-extrabold flex items-center justify-center gap-2 shadow-md transition-all active:scale-98 mt-6"
+                className="w-full py-3.5 rounded-xl bg-slate-900 hover:bg-slate-800 active:bg-black text-white text-base font-extrabold flex items-center justify-center gap-2 shadow-md transition-all active:scale-98 mt-6 focus:outline-none focus:ring-4 focus:ring-emerald-400 focus:ring-offset-2"
               >
                 <Check className="w-5 h-5 stroke-[3] text-emerald-400" />
                 {isLastProblem ? '모두 풀었습니다 (최종 제출)' : '중간 채점 및 제출'}
@@ -765,9 +868,10 @@ export default function PracticePage() {
 
               {/* 모바일 전용 완료 버튼 (키패드 바로 아래 배치) */}
               <button
+                ref={mobileFinishButtonRef}
                 type="button"
                 onClick={handleFinishAll}
-                className="md:hidden w-full max-w-sm mt-2 h-10 rounded-xl bg-slate-900 hover:bg-slate-800 active:bg-black text-white text-xs font-extrabold flex items-center justify-center gap-1.5 shadow-2xs transition-all active:scale-98"
+                className="md:hidden w-full max-w-sm mt-2 h-10 rounded-xl bg-slate-900 hover:bg-slate-800 active:bg-black text-white text-xs font-extrabold flex items-center justify-center gap-1.5 shadow-2xs transition-all active:scale-98 focus:outline-none focus:ring-4 focus:ring-emerald-400 focus:ring-offset-2"
               >
                 <Check className="w-4 h-4 stroke-[3] text-emerald-400" />
                 {isLastProblem ? '모두 풀었습니다 (최종 제출)' : '중간 채점 및 제출'}
@@ -836,8 +940,26 @@ export default function PracticePage() {
                           if (isProbCorrect) playCorrectSound();
                           else playIncorrectSound();
                         }
-                        if (isProbCorrect && ans) {
-                          advanceGridIfCorrect(problem, ans, idx);
+                        if (isImmediateGrading) {
+                          if (isProbCorrect && ans) {
+                            advanceGridIfCorrect(problem, ans, idx);
+                          } else if (idx === problems.length - 1) {
+                            // 마지막 문제에서 오답 또는 미완성 상태로 엔터 입력 시 채점 버튼으로 포커스 이동
+                            focusFinishButton();
+                          }
+                        } else {
+                          // 즉시 채점 꺼짐 모드
+                          if (idx === problems.length - 1) {
+                            const stateAnswers = useWorksheetStore.getState().userAnswers;
+                            if (areAllProblemsCorrect(stateAnswers)) {
+                              autoFinishPractice();
+                            } else {
+                              focusFinishButton();
+                            }
+                          } else {
+                            setFocusedGridIndex(idx + 1);
+                            gridCardRefs.current[idx + 1]?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                          }
                         }
                       }}
                       onAnswerChange={(val) => {
@@ -865,8 +987,10 @@ export default function PracticePage() {
           {/* 하단 일괄 채점하기 버튼 */}
           <div className="text-center pt-4">
             <button
+              ref={gridFinishButtonRef}
+              type="button"
               onClick={handleFinishAll}
-              className="px-8 py-4 bg-emerald-600 hover:bg-emerald-700 text-white text-lg font-black rounded-2xl shadow-lg transition-all active:scale-98 inline-flex items-center gap-2"
+              className="px-8 py-4 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white text-lg font-black rounded-2xl shadow-lg transition-all active:scale-98 inline-flex items-center gap-2 focus:outline-none focus:ring-4 focus:ring-emerald-400 focus:ring-offset-2"
             >
               <Check className="w-6 h-6 stroke-[3]" />
               전체 문제 채점하기
