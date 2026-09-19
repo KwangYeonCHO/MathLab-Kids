@@ -145,6 +145,7 @@ export interface UserAnswer {
   remainder?: number | null;
   fractionAnswer?: FractionValue | null;
   rawInput?: string;
+  rawRemainder?: string;
   isCorrect?: boolean;
   timeSpentMs?: number;
   submittedAt?: string;

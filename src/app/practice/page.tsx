@@ -35,6 +35,26 @@ export default function PracticePage() {
   const [activeInputType, setActiveInputType] = useState<'answer' | 'remainder' | 'whole' | 'num' | 'den'>('answer');
   const [activeFractionPart, setActiveFractionPart] = useState<'whole' | 'num' | 'den'>('num');
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  // 그리드 모드에서 현재 포커스 대상인 문제의 인덱스
+  const [focusedGridIndex, setFocusedGridIndex] = useState<number>(0);
+  const gridCardRefs = useRef<Record<number, HTMLDivElement | null>>({});
+
+  // 첫 번째 미작성 또는 미정답 문제의 인덱스 검색 (기본 1번, 풀이 중이면 해당 문제로 이동)
+  const getNextPendingProblemIndex = (startIndex: number = 0): number => {
+    if (!problems || problems.length === 0) return 0;
+    const isCorrect = (prob: (typeof problems)[0]) => {
+      const ans = userAnswers[prob.id];
+      if (!ans) return false;
+      return evaluateProblemAnswer(prob, ans);
+    };
+    for (let i = startIndex; i < problems.length; i++) {
+      if (!isCorrect(problems[i])) return i;
+    }
+    for (let i = 0; i < startIndex; i++) {
+      if (!isCorrect(problems[i])) return i;
+    }
+    return Math.min(startIndex, problems.length - 1);
+  };
 
   // 문제 세트가 없으면 기본 문제 자동 생성
   useEffect(() => {
@@ -55,6 +75,20 @@ export default function PracticePage() {
     }, 1000);
     return () => clearInterval(timer);
   }, []);
+
+  // 초기 진입 또는 뷰 모드 전환 시: 이미 푼 문제가 있으면 첫 번째 미작성/미정답 문제로 자동 커서 이동
+  useEffect(() => {
+    if (problems.length > 0) {
+      const initialTarget = getNextPendingProblemIndex(0);
+      if (practiceViewMode === 'single') {
+        if (currentIndex !== initialTarget) {
+          setCurrentIndex(initialTarget);
+        }
+      } else {
+        setFocusedGridIndex(initialTarget);
+      }
+    }
+  }, [problems.length, practiceViewMode]);
 
   const currentProblem = problems[currentIndex];
   const currentAnswer = currentProblem ? userAnswers[currentProblem.id] : undefined;
@@ -105,22 +139,23 @@ export default function PracticePage() {
 
     if (activeInputType === 'remainder' && isDivisionWithRemainder) {
       const prevRem =
-        curAns?.remainder !== null && curAns?.remainder !== undefined
+        curAns?.rawRemainder ??
+        (curAns?.remainder !== null && curAns?.remainder !== undefined
           ? curAns.remainder.toString()
-          : '';
+          : '');
       if (digit === '.') {
         if (currentProblem.category === 'decimal' && !prevRem.includes('.')) {
           const nextRemRaw = prevRem === '' ? '0.' : prevRem + '.';
-          setUserAnswer(currentProblem.id, undefined, parseFloat(nextRemRaw) || 0);
+          setUserAnswer(currentProblem.id, undefined, parseFloat(nextRemRaw) || 0, undefined, undefined, nextRemRaw);
         }
       } else {
         const nextRemRaw = prevRem + digit;
         if (currentProblem.category === 'decimal') {
           const nextRem = parseFloat(nextRemRaw);
-          setUserAnswer(currentProblem.id, undefined, isNaN(nextRem) ? null : nextRem);
+          setUserAnswer(currentProblem.id, undefined, isNaN(nextRem) ? null : nextRem, undefined, undefined, nextRemRaw);
         } else {
           const nextRem = parseInt(nextRemRaw, 10);
-          setUserAnswer(currentProblem.id, undefined, isNaN(nextRem) ? null : nextRem);
+          setUserAnswer(currentProblem.id, undefined, isNaN(nextRem) ? null : nextRem, undefined, undefined, nextRemRaw);
         }
       }
     } else {
@@ -179,19 +214,20 @@ export default function PracticePage() {
 
     if (activeInputType === 'remainder' && isDivisionWithRemainder) {
       const prevRem =
-        curAns?.remainder !== null && curAns?.remainder !== undefined
+        curAns?.rawRemainder ??
+        (curAns?.remainder !== null && curAns?.remainder !== undefined
           ? curAns.remainder.toString()
-          : '';
+          : '');
       if (prevRem.length <= 1) {
-        setUserAnswer(currentProblem.id, undefined, null);
+        setUserAnswer(currentProblem.id, undefined, null, undefined, undefined, '');
       } else {
         const nextRemRaw = prevRem.slice(0, -1);
         if (currentProblem.category === 'decimal') {
           const nextRem = parseFloat(nextRemRaw);
-          setUserAnswer(currentProblem.id, undefined, isNaN(nextRem) ? null : nextRem);
+          setUserAnswer(currentProblem.id, undefined, isNaN(nextRem) ? null : nextRem, undefined, undefined, nextRemRaw);
         } else {
           const nextRem = parseInt(nextRemRaw, 10);
-          setUserAnswer(currentProblem.id, undefined, isNaN(nextRem) ? null : nextRem);
+          setUserAnswer(currentProblem.id, undefined, isNaN(nextRem) ? null : nextRem, undefined, undefined, nextRemRaw);
         }
       }
     } else {
@@ -218,7 +254,7 @@ export default function PracticePage() {
       return;
     }
     if (activeInputType === 'remainder' && isDivisionWithRemainder) {
-      setUserAnswer(currentProblem.id, undefined, null);
+      setUserAnswer(currentProblem.id, undefined, null, undefined, undefined, '');
     } else {
       setUserAnswer(currentProblem.id, null, undefined, undefined, '');
     }
@@ -288,15 +324,16 @@ export default function PracticePage() {
       setTimeout(() => {
         setFeedback(null);
         if (currentIndex < problems.length - 1) {
-          nextProblem();
-          if (problems[currentIndex + 1]?.category === 'fraction') {
+          const nextIdx = getNextPendingProblemIndex(currentIndex + 1);
+          setCurrentIndex(nextIdx);
+          if (problems[nextIdx]?.category === 'fraction') {
             setActiveInputType('num');
             setActiveFractionPart('num');
           } else {
             setActiveInputType('answer');
           }
         }
-      }, 700);
+      }, 600);
     } else {
       if (currentIndex < problems.length - 1) {
         nextProblem();
@@ -328,6 +365,29 @@ export default function PracticePage() {
         } else {
           setActiveInputType('answer');
         }
+      }
+    }
+  };
+
+  // 그리드 모드에서 정답 작성 시 다음 미정답 문제 입력칸으로 자동 커서 이동
+  const advanceGridIfCorrect = (problem: (typeof problems)[0], updatedAns: (typeof userAnswers)[string], idx: number) => {
+    if (!isImmediateGrading) return;
+    const isProbCorrect = evaluateProblemAnswer(problem, updatedAns);
+    if (isProbCorrect) {
+      if (soundEnabled) playCorrectSound();
+      const nextAnswers = { ...userAnswers, [problem.id]: updatedAns };
+      let nextIdx = idx + 1;
+      while (nextIdx < problems.length) {
+        const nextP = problems[nextIdx];
+        const nextA = nextAnswers[nextP.id];
+        if (!nextA || !evaluateProblemAnswer(nextP, nextA)) break;
+        nextIdx++;
+      }
+      if (nextIdx < problems.length) {
+        setTimeout(() => {
+          setFocusedGridIndex(nextIdx);
+          gridCardRefs.current[nextIdx]?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }, 120);
       }
     }
   };
@@ -535,6 +595,7 @@ export default function PracticePage() {
                   userRemainder={currentAnswer?.remainder}
                   userFraction={currentAnswer?.fractionAnswer}
                   rawInput={currentAnswer?.rawInput}
+                  rawRemainder={currentAnswer?.rawRemainder}
                   autoFocus={practiceViewMode === 'single'}
                   activeInputType={activeInputType}
                   activeFractionPart={activeFractionPart}
@@ -549,8 +610,8 @@ export default function PracticePage() {
                   onAnswerChange={(val) =>
                     setUserAnswer(currentProblem.id, val, undefined, undefined)
                   }
-                  onRemainderChange={(val) =>
-                    setUserAnswer(currentProblem.id, undefined, val, undefined)
+                  onRemainderChange={(val, raw) =>
+                    setUserAnswer(currentProblem.id, undefined, val, undefined, undefined, raw)
                   }
                   onFractionChange={(val) =>
                     setUserAnswer(currentProblem.id, undefined, undefined, val)
@@ -719,6 +780,7 @@ export default function PracticePage() {
               return (
                 <div
                   key={problem.id}
+                  ref={(el) => { gridCardRefs.current[idx] = el; }}
                   className={`p-5 rounded-2xl shadow-sm flex flex-col justify-between transition-all duration-200 ${cardBorderClass}`}
                 >
                   <div className="flex items-center justify-between mb-3">
@@ -748,30 +810,32 @@ export default function PracticePage() {
                       userRemainder={ans?.remainder}
                       userFraction={ans?.fractionAnswer}
                       rawInput={ans?.rawInput}
+                      rawRemainder={ans?.rawRemainder}
+                      autoFocus={focusedGridIndex === idx}
+                      onFocus={() => setFocusedGridIndex(idx)}
                       onSubmit={() => {
                         if (isImmediateGrading && soundEnabled && hasAnswer) {
                           if (isProbCorrect) playCorrectSound();
                           else playIncorrectSound();
                         }
+                        if (isProbCorrect && ans) {
+                          advanceGridIfCorrect(problem, ans, idx);
+                        }
                       }}
                       onAnswerChange={(val) => {
                         setUserAnswer(problem.id, val, undefined, undefined);
-                        if (isImmediateGrading && soundEnabled && val !== null && !isNaN(val)) {
-                          if (evaluateProblemAnswer(problem, { ...ans, problemId: problem.id, answer: val })) {
-                            playCorrectSound();
-                          }
-                        }
+                        const updated = { ...(ans || { problemId: problem.id }), answer: val };
+                        advanceGridIfCorrect(problem, updated, idx);
                       }}
-                      onRemainderChange={(val) => {
-                        setUserAnswer(problem.id, undefined, val, undefined);
+                      onRemainderChange={(val, raw) => {
+                        setUserAnswer(problem.id, undefined, val, undefined, undefined, raw);
+                        const updated = { ...(ans || { problemId: problem.id }), remainder: val, rawRemainder: raw };
+                        advanceGridIfCorrect(problem, updated, idx);
                       }}
                       onFractionChange={(val) => {
                         setUserAnswer(problem.id, undefined, undefined, val);
-                        if (isImmediateGrading && soundEnabled && val) {
-                          if (evaluateProblemAnswer(problem, { ...ans, problemId: problem.id, answer: null, fractionAnswer: val })) {
-                            playCorrectSound();
-                          }
-                        }
+                        const updated = { ...(ans || { problemId: problem.id }), fractionAnswer: val };
+                        advanceGridIfCorrect(problem, updated, idx);
                       }}
                     />
                   </div>

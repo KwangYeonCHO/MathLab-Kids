@@ -8,8 +8,9 @@ interface HorizontalProblemProps {
   userAnswer?: number | null;
   userRemainder?: number | null;
   rawInput?: string;
+  rawRemainder?: string;
   onAnswerChange?: (val: number | null) => void;
-  onRemainderChange?: (val: number | null) => void;
+  onRemainderChange?: (val: number | null, raw?: string) => void;
   onFocusAnswer?: () => void;
   onFocusRemainder?: () => void;
   onSubmit?: () => void;
@@ -40,6 +41,7 @@ export function HorizontalProblem({
   userAnswer,
   userRemainder,
   rawInput,
+  rawRemainder,
   onAnswerChange,
   onRemainderChange,
   onFocusAnswer,
@@ -156,7 +158,9 @@ export function HorizontalProblem({
       : '';
 
   const remainderDisplayValue =
-    userRemainder !== null && userRemainder !== undefined
+    rawRemainder !== undefined && rawRemainder !== ''
+      ? String(rawRemainder)
+      : userRemainder !== null && userRemainder !== undefined
       ? String(userRemainder)
       : '';
 
@@ -288,12 +292,13 @@ export function HorizontalProblem({
                   }
                 }}
                 onChange={(e) => {
-                  const val = normalizeNumeric(e.target.value).replace(/[^0-9.]/g, '');
+                  const isDecimal = problem.category === 'decimal';
+                  const val = normalizeNumeric(e.target.value, isDecimal).replace(/[^0-9.]/g, '');
                   if (val === '') {
-                    onRemainderChange?.(null);
+                    onRemainderChange?.(null, '');
                   } else {
-                    const parsed = problem.category === 'decimal' ? parseFloat(val) : parseInt(val, 10);
-                    onRemainderChange?.(isNaN(parsed) ? null : parsed);
+                    const parsed = isDecimal ? parseFloat(val) : parseInt(val, 10);
+                    onRemainderChange?.(isNaN(parsed) ? null : parsed, val);
                   }
                 }}
                 placeholder="나머지"

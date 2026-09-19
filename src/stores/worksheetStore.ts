@@ -61,7 +61,8 @@ interface WorksheetState {
     answer?: number | null,
     remainder?: number | null,
     fractionAnswer?: FractionValue | null,
-    rawInput?: string
+    rawInput?: string,
+    rawRemainder?: string
   ) => void;
   submitCurrentAnswer: () => boolean; // 정답 여부 반환
   nextProblem: () => void;
@@ -201,7 +202,7 @@ export const useWorksheetStore = create<WorksheetState>()(
     }
   },
 
-  setUserAnswer: (problemId, answer, remainder, fractionAnswer, rawInput) => {
+  setUserAnswer: (problemId, answer, remainder, fractionAnswer, rawInput, rawRemainder) => {
     const state = get();
     const currentAns = state.userAnswers[problemId] || {
       problemId,
@@ -215,6 +216,7 @@ export const useWorksheetStore = create<WorksheetState>()(
       remainder: remainder !== undefined ? remainder : currentAns.remainder,
       fractionAnswer: fractionAnswer !== undefined ? fractionAnswer : currentAns.fractionAnswer,
       rawInput: rawInput !== undefined ? rawInput : currentAns.rawInput,
+      rawRemainder: rawRemainder !== undefined ? rawRemainder : currentAns.rawRemainder,
     };
 
     const nextAnswers = {

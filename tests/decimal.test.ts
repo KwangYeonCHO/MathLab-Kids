@@ -1,4 +1,6 @@
 import { describe, it, expect } from 'vitest';
+import React from 'react';
+import { renderToString } from 'react-dom/server';
 import {
   countDecimals,
   addDecimals,
@@ -11,6 +13,9 @@ import {
   floorDecimal,
   areDecimalsEqual,
 } from '../src/domain/math/core/decimal';
+import { useWorksheetStore } from '@/stores/worksheetStore';
+import { HorizontalProblem } from '../src/components/problem-view/HorizontalProblem';
+import { Problem } from '../src/domain/math/types';
 
 describe('소수(Decimal) 코어 수학 엔진 단위 테스트', () => {
   describe('소수점 자릿수 카운팅', () => {
@@ -92,6 +97,38 @@ describe('소수(Decimal) 코어 수학 엔진 단위 테스트', () => {
 
     it('동일 소수 판별 함수가 안전하게 동작해야 함', () => {
       expect(areDecimalsEqual(0.1 + 0.2, 0.3)).toBe(true);
+    });
+  });
+
+  describe('소수 나눗셈 나머지 입력값 보존 (rawRemainder)', () => {
+    it('worksheetStore에 rawRemainder가 전달되면 온전히 저장되어야 함', () => {
+      useWorksheetStore.getState().setUserAnswer('test-prob', 3, 1, undefined, undefined, '1.');
+      const ans = useWorksheetStore.getState().userAnswers['test-prob'];
+      expect(ans.remainder).toBe(1);
+      expect(ans.rawRemainder).toBe('1.');
+    });
+
+    it('HorizontalProblem 컴포넌트 렌더링 시 rawRemainder가 존재하면 소수점을 포함해 표시되어야 함', () => {
+      const problem: Problem = {
+        id: 'test-prob',
+        index: 1,
+        operation: 'division',
+        category: 'decimal',
+        operandA: 7.5,
+        operandB: 2,
+        answer: 3,
+        remainder: 1.5,
+        displayFormat: 'horizontal',
+      };
+      const html = renderToString(
+        React.createElement(HorizontalProblem, {
+          problem,
+          userAnswer: 3,
+          userRemainder: 1,
+          rawRemainder: '1.',
+        })
+      );
+      expect(html).toContain('value="1."');
     });
   });
 });
