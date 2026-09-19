@@ -191,6 +191,15 @@ export default function ResultPage() {
               division: '÷',
             }[problem.operation];
 
+            const opSymbol2 = problem.operation2
+              ? {
+                  addition: '+',
+                  subtraction: '−',
+                  multiplication: '×',
+                  division: '÷',
+                }[problem.operation2]
+              : opSymbol;
+
             return (
               <div
                 key={problem.id}
@@ -237,7 +246,15 @@ export default function ResultPage() {
                       </span>
                     ) : (
                       <span>
-                        {problem.operandA} {opSymbol} {problem.operandB} ={' '}
+                        {problem.operandC !== undefined ? (
+                          <>
+                            {problem.operandA} {opSymbol} {problem.operandB} {opSymbol2} {problem.operandC} ={' '}
+                          </>
+                        ) : (
+                          <>
+                            {problem.operandA} {opSymbol} {problem.operandB} ={' '}
+                          </>
+                        )}
                         <span className="text-slate-900 font-extrabold">{problem.answer}</span>
                         {problem.operation === 'division' && problem.remainder !== undefined && (
                           <span className="text-xs text-slate-500 font-medium ml-1">
