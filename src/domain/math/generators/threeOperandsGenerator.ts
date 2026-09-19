@@ -13,6 +13,40 @@ import { WorksheetRule, Problem, Operation } from '../types';
 import { getRandomInt, pickRandom, getRangeForDigit } from './utils';
 import { countCarries } from '../analyzers/carry';
 
+/**
+ * 해당 규칙이 세 수의 사칙연산(세 수의 계산)을 지원하는지 여부를 판정합니다.
+ * 2022 개정 초등 수학 교육과정 기준:
+ * - 1~4학년 기본 자연수 사칙연산(arithmetic)만 지원
+ * - 분수(fraction), 소수(decimal), 자연수 혼합 계산(mixed_operation), 비와 비율/비례식(proportion), 약수와 배수(factors_multiples)는 미지원
+ * - 2학년 2학기 곱셈구구(단별 암기)는 두 수의 곱셈 전용이므로 미지원
+ */
+export function isThreeOperandsSupported(rule?: WorksheetRule | null): boolean {
+  if (!rule) return false;
+
+  // 1. 특수 카테고리(분수, 소수, 혼합계산, 비례식, 약수와 배수) 판별
+  if (rule.category && rule.category !== 'arithmetic') {
+    return false;
+  }
+
+  // 2. 카테고리가 명시되지 않았더라도 특수 규칙 객체가 포함된 경우 방어
+  if (
+    rule.fractionRule ||
+    rule.decimalRule ||
+    rule.mixedOpRule ||
+    rule.proportionRule ||
+    rule.factorRule
+  ) {
+    return false;
+  }
+
+  // 3. 곱셈구구 (단별 구구단 2단~9단) 규칙인 경우 미지원
+  if (rule.multiplicationRule) {
+    return false;
+  }
+
+  return true;
+}
+
 export function generateThreeOperandProblem(
   rule: WorksheetRule,
   index: number,

@@ -4,6 +4,8 @@ import { WorksheetRule } from '../src/domain/math/types';
 import { GRADE_PRESETS } from '../src/domain/math/presets';
 import { resolveRuleTitle } from '../src/domain/math/ruleTitle';
 import { makeProblemKey } from '../src/domain/math/generators/utils';
+import { isThreeOperandsSupported } from '../src/domain/math/generators/threeOperandsGenerator';
+import { useWorksheetStore } from '@/stores/worksheetStore';
 
 describe('세 수의 사칙연산 연산 엔진 무결점 검증 (Three Operands Engine)', () => {
   it('세 수의 덧셈 (A + B + C) 정답 계산 및 속성 검증', () => {
@@ -269,6 +271,75 @@ describe('세 수의 사칙연산 연산 엔진 무결점 검증 (Three Operands
     // 단 한 문항도 가로셈으로 강제 전환되거나 혼합되지 않아야 함
     res.problems.forEach((p) => {
       expect(p.displayFormat).toBe('vertical');
+    });
+  });
+
+  describe('학년별 세 수 연산 지원 여부(isThreeOperandsSupported) 및 비활성화 무결점 검증', () => {
+    it('1~4학년 기본 자연수 사칙연산 프리셋은 세 수 연산을 지원(true)해야 함', () => {
+      const supportedPresetIds = [
+        'g1-add-sub-basic',
+        'g1-add-sub-no-carry-vertical',
+        'g1-three-numbers-add-sub',
+        'g2-add-carry-once',
+        'g2-sub-borrow-once',
+        'g2-add-sub-mastery',
+        'g3-add-sub-three-digits',
+        'g3-multiplication-basic',
+        'g3-division-exact',
+        'g3-division-remainder',
+        'g3-multiplication-advanced',
+        'g4-multi-digits-mult-div',
+      ];
+
+      supportedPresetIds.forEach((id) => {
+        const preset = GRADE_PRESETS.find((p) => p.id === id);
+        expect(preset, `프리셋 ${id} 존재해야 함`).toBeDefined();
+        expect(isThreeOperandsSupported(preset!.rule), `${id}는 세 수 연산을 지원해야 함`).toBe(true);
+      });
+    });
+
+    it('곱셈구구, 분수, 소수, 혼합계산, 비례식, 약수와배수 프리셋은 세 수 연산을 미지원(false)해야 함', () => {
+      const unsupportedPresetIds = [
+        'g2-multiplication-table', // 2학년 곱셈구구 (2단~9단)
+        'g4-frac-same-denom', // 4학년 분수
+        'g4-decimal-add-sub', // 4학년 소수
+        'g5-mixed-ops-basic', // 5학년 혼합 계산
+        'g5-mixed-ops-paren', // 5학년 괄호 혼합 계산
+        'g5-factors-gcd-lcm', // 5학년 최대공약수/최소공배수
+        'g5-frac-diff-denom-add', // 5학년 분수 덧셈
+        'g5-frac-diff-denom-sub', // 5학년 분수 뺄셈
+        'g5-frac-multiplication', // 5학년 분수 곱셈
+        'g5-decimal-multiplication', // 5학년 소수 곱셈
+        'g6-frac-division-basic', // 6학년 분수 나눗셈
+        'g6-decimal-division-quotient', // 6학년 소수 나눗셈
+        'g6-percentage-calculation', // 6학년 백분율
+        'g6-frac-division-advanced', // 6학년 역수 곱셈
+        'g6-decimal-division-remainder', // 6학년 소수 몫과 나머지
+        'g6-simplest-ratio', // 6학년 자연수 비
+        'g6-proportion-solve', // 6학년 비례식
+        'g6-all-round-challenge', // 6학년 혼합 심화
+      ];
+
+      unsupportedPresetIds.forEach((id) => {
+        const preset = GRADE_PRESETS.find((p) => p.id === id);
+        expect(preset, `프리셋 ${id} 존재해야 함`).toBeDefined();
+        expect(isThreeOperandsSupported(preset!.rule), `${id}는 세 수 연산이 비활성화(미지원)되어야 함`).toBe(false);
+      });
+    });
+
+    it('미지원 규칙(예: 분수)에서 setRule로 operandCount를 3으로 설정하려 해도 2로 강제 유지되어야 함', () => {
+      const fracPreset = GRADE_PRESETS.find((p) => p.id === 'g5-frac-diff-denom-add');
+      expect(fracPreset).toBeDefined();
+
+      useWorksheetStore.getState().loadPreset('g5-frac-diff-denom-add');
+      const currentRule = useWorksheetStore.getState().currentRule;
+      expect(currentRule.operandCount ?? 2).toBe(2);
+
+      // 의도적으로 세 수 연산(3) 설정을 시도
+      useWorksheetStore.getState().setRule({ operandCount: 3 });
+      const updatedRule = useWorksheetStore.getState().currentRule;
+      // 미지원 규칙이므로 2로 유지되어야 함
+      expect(updatedRule.operandCount).toBe(2);
     });
   });
 });

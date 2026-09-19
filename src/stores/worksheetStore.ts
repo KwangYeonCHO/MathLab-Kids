@@ -9,6 +9,7 @@ import { areDecimalsEqual } from '../domain/math/core/decimal';
 import { GRADE_PRESETS } from '../domain/math/presets';
 import { generateWorksheet } from '../domain/math/generators/engine';
 import { resolveRuleTitle, findMatchingPreset } from '../domain/math/ruleTitle';
+import { isThreeOperandsSupported } from '../domain/math/generators/threeOperandsGenerator';
 import { saveSessionResult, saveInProgressSession } from '../db/historyDb';
 
 interface WorksheetState {
@@ -136,6 +137,12 @@ export const useWorksheetStore = create<WorksheetState>()(
           typeof ruleOrUpdater === 'function'
             ? ruleOrUpdater(get().currentRule)
             : { ...get().currentRule, ...ruleOrUpdater };
+
+        // 세 수의 연산을 지원하지 않는 학년/유형인 경우 operandCount=2로 강제 보정
+        if (!isThreeOperandsSupported(nextRule)) {
+          nextRule.operandCount = 2;
+        }
+
         const matched = findMatchingPreset(nextRule);
         set({ currentRule: nextRule, currentPresetId: matched ? matched.id : null });
         get().generateNewProblems();
@@ -149,7 +156,12 @@ export const useWorksheetStore = create<WorksheetState>()(
       loadPreset: (presetId) => {
         const preset = GRADE_PRESETS.find((p) => p.id === presetId);
         if (preset) {
-          set({ currentRule: { ...preset.rule }, currentPresetId: preset.id });
+          const nextRule = { ...preset.rule };
+          // 세 수의 연산을 지원하지 않는 프리셋인 경우 operandCount=2로 보정
+          if (!isThreeOperandsSupported(nextRule)) {
+            nextRule.operandCount = 2;
+          }
+          set({ currentRule: nextRule, currentPresetId: preset.id });
           get().generateNewProblems();
         }
       },

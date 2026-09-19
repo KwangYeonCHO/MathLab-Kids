@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useWorksheetStore } from '@/stores/worksheetStore';
 import { Operation, CarryCondition, BorrowCondition, DivisionRemainderCondition, DisplayFormat, UniqueMode } from '@/domain/math/types';
+import { isThreeOperandsSupported } from '@/domain/math/generators/threeOperandsGenerator';
 import { PresetSelector } from './PresetSelector';
 import { CreateActionButtons } from './CreateActionButtons';
 import { Sliders, Settings2, Check, RotateCcw } from 'lucide-react';
@@ -10,6 +11,9 @@ import { Sliders, Settings2, Check, RotateCcw } from 'lucide-react';
 export function RuleEditor() {
   const { currentRule, setRule, resetRuleToDefault } = useWorksheetStore();
   const [isAdvanced, setIsAdvanced] = useState(false);
+
+  const isThreeSupported = isThreeOperandsSupported(currentRule);
+  const effectiveOperandCount = isThreeSupported ? (currentRule.operandCount ?? 2) : 2;
 
   // 연산 종류 토글
   const handleToggleOperation = (op: Operation) => {
@@ -50,6 +54,9 @@ export function RuleEditor() {
 
   // 피연산자 수 (2개 vs 3개) 변경
   const handleSetOperandCount = (count: 2 | 3) => {
+    if (count === 3 && !isThreeSupported) {
+      return;
+    }
     setRule({
       operandCount: count,
       operandC: currentRule.operandC || {
@@ -150,15 +157,22 @@ export function RuleEditor() {
 
         {/* 2.5. 연산할 수의 개수 (2개 vs 3개) */}
         <div className="pt-2 border-t border-slate-100">
-          <label className="block text-sm font-bold text-slate-700 mb-2.5">
-            연산할 수의 개수 <span className="text-xs text-slate-400 font-normal">(2개 또는 3개의 수)</span>
-          </label>
+          <div className="flex items-center justify-between mb-2.5">
+            <label className="block text-sm font-bold text-slate-700">
+              연산할 수의 개수 <span className="text-xs text-slate-400 font-normal">(2개 또는 3개의 수)</span>
+            </label>
+            {!isThreeSupported && (
+              <span className="text-[11px] font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
+                현재 문제 유형은 2개의 수만 지원
+              </span>
+            )}
+          </div>
           <div className="grid grid-cols-2 gap-3 max-w-md">
             <button
               type="button"
               onClick={() => handleSetOperandCount(2)}
               className={`py-2.5 px-3.5 rounded-xl font-bold text-xs sm:text-sm border flex items-center justify-between transition-all ${
-                (currentRule.operandCount ?? 2) === 2
+                effectiveOperandCount === 2
                   ? 'border-emerald-500 bg-emerald-50 text-emerald-800 shadow-sm ring-1 ring-emerald-500'
                   : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
               }`}
@@ -167,24 +181,41 @@ export function RuleEditor() {
                 <div className="font-extrabold">2개의 수</div>
                 <div className="text-[11px] text-slate-400 font-normal">A ○ B 형태 (기본)</div>
               </div>
-              {(currentRule.operandCount ?? 2) === 2 && (
+              {effectiveOperandCount === 2 && (
                 <Check className="w-4 h-4 text-emerald-600 stroke-[3]" />
               )}
             </button>
             <button
               type="button"
+              disabled={!isThreeSupported}
               onClick={() => handleSetOperandCount(3)}
               className={`py-2.5 px-3.5 rounded-xl font-bold text-xs sm:text-sm border flex items-center justify-between transition-all ${
-                currentRule.operandCount === 3
+                !isThreeSupported
+                  ? 'border-slate-200 bg-slate-100/80 text-slate-400 cursor-not-allowed opacity-60 select-none'
+                  : effectiveOperandCount === 3
                   ? 'border-emerald-500 bg-emerald-50 text-emerald-800 shadow-sm ring-1 ring-emerald-500'
                   : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
               }`}
+              title={
+                !isThreeSupported
+                  ? '현재 학년 및 연산 유형(분수·소수·혼합계산·비례식·곱셈구구 등)에서는 세 수의 연산이 지원되지 않습니다.'
+                  : undefined
+              }
             >
               <div className="text-left">
-                <div className="font-extrabold">3개의 수</div>
-                <div className="text-[11px] text-slate-400 font-normal">A ○ B ○ C (세 수의 계산)</div>
+                <div className="flex items-center gap-1.5">
+                  <span className="font-extrabold">3개의 수</span>
+                  {!isThreeSupported && (
+                    <span className="text-[10px] font-bold text-slate-400 bg-slate-200/80 px-1.5 py-0.5 rounded">
+                      미지원
+                    </span>
+                  )}
+                </div>
+                <div className="text-[11px] text-slate-400 font-normal">
+                  {!isThreeSupported ? '해당 학년/유형 미지원' : 'A ○ B ○ C (세 수의 계산)'}
+                </div>
               </div>
-              {currentRule.operandCount === 3 && (
+              {isThreeSupported && effectiveOperandCount === 3 && (
                 <Check className="w-4 h-4 text-emerald-600 stroke-[3]" />
               )}
             </button>
@@ -197,7 +228,7 @@ export function RuleEditor() {
             자릿수 설정 <span className="text-xs text-slate-400 font-normal">(복수 선택 가능)</span>
           </label>
 
-          <div className={`grid grid-cols-1 ${currentRule.operandCount === 3 ? 'md:grid-cols-3' : 'md:grid-cols-2'} gap-4`}>
+          <div className={`grid grid-cols-1 ${effectiveOperandCount === 3 ? 'md:grid-cols-3' : 'md:grid-cols-2'} gap-4`}>
             {/* 첫 번째 수 (피연산자 A) 카드 */}
             <div className="p-4 rounded-xl border-2 border-emerald-500/25 bg-emerald-50/20 space-y-3">
               <div className="flex items-center justify-between pb-2 border-b border-emerald-100">
@@ -281,7 +312,7 @@ export function RuleEditor() {
             </div>
 
             {/* 세 번째 수 (피연산자 C) 카드 */}
-            {currentRule.operandCount === 3 && (
+            {effectiveOperandCount === 3 && (
               <div className="p-4 rounded-xl border-2 border-violet-500/25 bg-violet-50/20 space-y-3">
                 <div className="flex items-center justify-between pb-2 border-b border-violet-100">
                   <div className="flex items-center gap-2">
