@@ -566,6 +566,7 @@ export function RuleEditor() {
                     setRule({
                       operandA: { ...currentRule.operandA, allowZeroEnding: e.target.checked },
                       operandB: { ...currentRule.operandB, allowZeroEnding: e.target.checked },
+                      ...(currentRule.operandC ? { operandC: { ...currentRule.operandC, allowZeroEnding: e.target.checked } } : {}),
                     })
                   }
                   className="w-4 h-4 text-emerald-600 rounded"

@@ -108,8 +108,21 @@ export default function PracticePage() {
         curAns?.remainder !== null && curAns?.remainder !== undefined
           ? curAns.remainder.toString()
           : '';
-      const nextRem = parseInt(prevRem + digit, 10);
-      setUserAnswer(currentProblem.id, undefined, isNaN(nextRem) ? null : nextRem);
+      if (digit === '.') {
+        if (currentProblem.category === 'decimal' && !prevRem.includes('.')) {
+          const nextRemRaw = prevRem === '' ? '0.' : prevRem + '.';
+          setUserAnswer(currentProblem.id, undefined, parseFloat(nextRemRaw) || 0);
+        }
+      } else {
+        const nextRemRaw = prevRem + digit;
+        if (currentProblem.category === 'decimal') {
+          const nextRem = parseFloat(nextRemRaw);
+          setUserAnswer(currentProblem.id, undefined, isNaN(nextRem) ? null : nextRem);
+        } else {
+          const nextRem = parseInt(nextRemRaw, 10);
+          setUserAnswer(currentProblem.id, undefined, isNaN(nextRem) ? null : nextRem);
+        }
+      }
     } else {
       const prevRaw = curAns?.rawInput ?? (curAns?.answer !== null && curAns?.answer !== undefined ? curAns.answer.toString() : '');
       if (digit === '.') {
@@ -172,8 +185,14 @@ export default function PracticePage() {
       if (prevRem.length <= 1) {
         setUserAnswer(currentProblem.id, undefined, null);
       } else {
-        const nextRem = parseInt(prevRem.slice(0, -1), 10);
-        setUserAnswer(currentProblem.id, undefined, isNaN(nextRem) ? null : nextRem);
+        const nextRemRaw = prevRem.slice(0, -1);
+        if (currentProblem.category === 'decimal') {
+          const nextRem = parseFloat(nextRemRaw);
+          setUserAnswer(currentProblem.id, undefined, isNaN(nextRem) ? null : nextRem);
+        } else {
+          const nextRem = parseInt(nextRemRaw, 10);
+          setUserAnswer(currentProblem.id, undefined, isNaN(nextRem) ? null : nextRem);
+        }
       }
     } else {
       const prevRaw = curAns?.rawInput ?? (curAns?.answer !== null && curAns?.answer !== undefined ? curAns.answer.toString() : '');
@@ -202,6 +221,28 @@ export default function PracticePage() {
       setUserAnswer(currentProblem.id, undefined, null);
     } else {
       setUserAnswer(currentProblem.id, null, undefined, undefined, '');
+    }
+  };
+
+  // 음수 부호 토글 핸들러
+  const handleToggleNegative = () => {
+    if (!currentProblem || currentProblem.category === 'fraction') return;
+    const curAns = useWorksheetStore.getState().userAnswers[currentProblem.id];
+    const prevRaw = curAns?.rawInput ?? (curAns?.answer !== null && curAns?.answer !== undefined ? curAns.answer.toString() : '');
+    let nextRaw = '';
+    if (prevRaw.startsWith('-')) {
+      nextRaw = prevRaw.slice(1);
+    } else if (prevRaw !== '' && prevRaw !== '0') {
+      nextRaw = '-' + prevRaw;
+    } else {
+      nextRaw = '-';
+    }
+
+    if (nextRaw === '' || nextRaw === '-') {
+      setUserAnswer(currentProblem.id, null, undefined, undefined, nextRaw);
+    } else {
+      const parsed = currentProblem.category === 'decimal' ? parseFloat(nextRaw) : parseInt(nextRaw, 10);
+      setUserAnswer(currentProblem.id, isNaN(parsed) ? null : parsed, undefined, undefined, nextRaw);
     }
   };
 
@@ -640,6 +681,7 @@ export default function PracticePage() {
                 canNext={currentIndex < problems.length - 1}
                 allowNegative={currentRule.allowNegative}
                 allowDecimal={currentProblem.category === 'decimal'}
+                onToggleNegative={handleToggleNegative}
               />
 
               {/* 모바일 전용 완료 버튼 (키패드 바로 아래 배치) */}

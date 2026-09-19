@@ -26,6 +26,7 @@ export function A4Sheet({ children, fit = false, answerKey }: {
       if (disposed) return;
       content.style.zoom = '1';
       content.style.height = 'auto';
+      content.style.minHeight = '0px';
       const availableHeight = content.parentElement!.getBoundingClientRect().height;
       const availableWidth = content.clientWidth;
       const worksheetHeight = content.firstElementChild!.getBoundingClientRect().height;

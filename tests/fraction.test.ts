@@ -94,6 +94,8 @@ describe('분수(Fraction) 코어 수학 엔진 단위 테스트', () => {
       expect(isSimplestForm({ whole: 1, numerator: 2, denominator: 4 })).toBe(false);
       // 대분수인데 분자가 분모보다 큰 경우 false
       expect(isSimplestForm({ whole: 1, numerator: 5, denominator: 3 })).toBe(false);
+      // 대분수로 변환되지 않은 순수 가분수(5/4)는 초등 표준 기약분수가 아님
+      expect(isSimplestForm({ numerator: 5, denominator: 4 })).toBe(false);
     });
 
     it('동치분수(Equivalent Fractions)를 올바르게 인식해야 함', () => {

@@ -90,7 +90,13 @@ export function divideDecimalsWithRemainder(dividend: number, divisor: number): 
   if (divisor <= 0) {
     throw new Error('나누는 수는 0보다 커야 합니다.');
   }
-  const quotient = Math.floor(divideDecimals(dividend, divisor));
+  const decA = countDecimals(dividend);
+  const decB = countDecimals(divisor);
+  const maxDec = Math.max(decA, decB);
+  const factor = Math.pow(10, maxDec);
+  const intA = Math.round(dividend * factor);
+  const intB = Math.round(divisor * factor);
+  const quotient = Math.floor(intA / intB);
   const product = multiplyDecimals(divisor, quotient);
   const remainder = subDecimals(dividend, product);
 

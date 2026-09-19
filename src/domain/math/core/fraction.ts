@@ -109,6 +109,11 @@ export function isSimplestForm(f: FractionValue): boolean {
   if (f.denominator <= 0) return false;
   if (f.numerator === 0) return f.denominator === 1;
 
+  // 자연수 부분이 없는 가분수는 대분수 기약 표준형이 아님
+  if (!f.whole && f.numerator >= f.denominator) {
+    return false;
+  }
+
   // 대분수일 때 분자가 분모보다 크거나 같으면 기약 대분수가 아님
   if (f.whole && f.whole > 0 && f.numerator >= f.denominator) {
     return false;

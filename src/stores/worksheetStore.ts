@@ -12,6 +12,19 @@ import { resolveRuleTitle, findMatchingPreset } from '../domain/math/ruleTitle';
 import { isThreeOperandsSupported } from '../domain/math/generators/threeOperandsGenerator';
 import { saveSessionResult, saveInProgressSession } from '../db/historyDb';
 
+let saveInProgressTimer: ReturnType<typeof setTimeout> | null = null;
+function debouncedSaveInProgress(
+  rule: WorksheetRule,
+  problems: Problem[],
+  userAnswers: Record<string, UserAnswer>,
+  currentIndex: number
+) {
+  if (saveInProgressTimer) clearTimeout(saveInProgressTimer);
+  saveInProgressTimer = setTimeout(() => {
+    saveInProgressSession(rule, problems, userAnswers, currentIndex);
+  }, 300);
+}
+
 interface WorksheetState {
   currentRule: WorksheetRule;
   currentPresetId: string | null;
@@ -133,17 +146,20 @@ export const useWorksheetStore = create<WorksheetState>()(
       setPrintFontScale: (scale) => set({ printFontScale: Math.max(0.7, Math.min(1.5, scale)) }),
 
       setRule: (ruleOrUpdater) => {
-        const nextRule =
+        const nextRuleRaw =
           typeof ruleOrUpdater === 'function'
             ? ruleOrUpdater(get().currentRule)
             : { ...get().currentRule, ...ruleOrUpdater };
 
         // 세 수의 연산을 지원하지 않는 학년/유형인 경우 operandCount=2로 강제 보정
-        if (!isThreeOperandsSupported(nextRule)) {
-          nextRule.operandCount = 2;
+        if (!isThreeOperandsSupported(nextRuleRaw)) {
+          nextRuleRaw.operandCount = 2;
         }
 
-        const matched = findMatchingPreset(nextRule);
+        const matched = findMatchingPreset(nextRuleRaw);
+        const nextTitle = matched ? matched.title : resolveRuleTitle(nextRuleRaw);
+        const nextRule = { ...nextRuleRaw, title: nextTitle };
+
         set({ currentRule: nextRule, currentPresetId: matched ? matched.id : null });
         get().generateNewProblems();
       },
@@ -208,8 +224,8 @@ export const useWorksheetStore = create<WorksheetState>()(
 
     set({ userAnswers: nextAnswers });
 
-    // 자동 임시 저장
-    saveInProgressSession(state.currentRule, state.problems, nextAnswers, state.currentIndex);
+    // 자동 임시 저장 (디바운스 처리로 불필요한 연속 디스크 I/O 방지)
+    debouncedSaveInProgress(state.currentRule, state.problems, nextAnswers, state.currentIndex);
   },
 
   submitCurrentAnswer: () => {
@@ -365,6 +381,7 @@ export const useWorksheetStore = create<WorksheetState>()(
         isExample: false,
       }));
       set({
+        currentRule: { ...state.currentRule, count: resetProblems.length },
         problems: resetProblems,
         userAnswers: {},
         currentIndex: 0,
@@ -381,7 +398,23 @@ export const useWorksheetStore = create<WorksheetState>()(
       const res = generateWorksheet(tempRule);
       if (res.success && res.problems.length > 0) {
         set({
+          currentRule: { ...state.currentRule, count: res.problems.length },
           problems: res.problems,
+          userAnswers: {},
+          currentIndex: 0,
+          startTime: Date.now(),
+          problemStartTime: Date.now(),
+        });
+      } else {
+        // 생성 실패 시 기존 틀린 문제로 안전하게 복구
+        const resetProblems = wrongProblems.map((p, idx) => ({
+          ...p,
+          index: idx + 1,
+          isExample: false,
+        }));
+        set({
+          currentRule: { ...state.currentRule, count: resetProblems.length },
+          problems: resetProblems,
           userAnswers: {},
           currentIndex: 0,
           startTime: Date.now(),

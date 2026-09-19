@@ -69,6 +69,12 @@ describe('소수(Decimal) 코어 수학 엔진 단위 테스트', () => {
       expect(res.quotient).toBe(4);
       expect(res.remainder).toBe(0.6);
     });
+
+    it('사사오입 올림으로 인해 몫이 1 커지고 나머지가 음수가 되는 부동소수점 예외가 발생하지 않아야 함', () => {
+      const res = divideDecimalsWithRemainder(0.99996, 1);
+      expect(res.quotient).toBe(0);
+      expect(res.remainder).toBe(0.99996);
+    });
   });
 
   describe('어림하기 (반올림, 올림, 버림)', () => {

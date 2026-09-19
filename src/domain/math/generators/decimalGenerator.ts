@@ -74,7 +74,8 @@ export function generateDecimalProblem(
           remainder = res.remainder;
         } else {
           // 딱 나누어떨어지는 소수 나눗셈 문제 생성: (몫 * 제수 = 피제수) 역생성 기법
-          const quotient = getRandomInt(1, 30);
+          const makeDec = Math.random() > 0.4;
+          const quotient = makeDec ? getRandomInt(2, 45) / 10 : getRandomInt(1, 20);
           opA = multiplyDecimals(opB, quotient);
           answer = quotient;
         }

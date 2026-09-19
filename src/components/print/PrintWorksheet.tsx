@@ -138,7 +138,14 @@ export function PrintWorksheet({
           <span className="tracking-widest uppercase text-slate-600 font-black">
             MathLab Kids · 초등 수학 학습지
           </span>
-          <span>{currentDate}</span>
+          <div className="flex items-center gap-2">
+            {totalSheets && totalSheets > 1 && sheetIndex && (
+              <span className="text-[10px] font-extrabold text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                제 {sheetIndex} / {totalSheets} 장
+              </span>
+            )}
+            <span>{currentDate}</span>
+          </div>
         </div>
 
         <div className="flex items-baseline justify-between mt-0.5">

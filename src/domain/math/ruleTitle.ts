@@ -5,11 +5,6 @@ import { GRADE_PRESETS } from './presets';
  * 주어진 규칙이 공식 학년별 프리셋 규칙과 일치하는지 엄격하게 판별합니다.
  */
 export function matchesPreset(rule: WorksheetRule, presetRule: WorksheetRule): boolean {
-  // 1. 프리셋 제목이 둘 다 명시되어 있는데 서로 다르면 다른 프리셋으로 즉시 판정
-  if (rule.title && presetRule.title && rule.title !== presetRule.title) {
-    return false;
-  }
-
   // 2. 카테고리 비교 (fraction, decimal, mixed_operation, proportion, factors_multiples, arithmetic 등)
   const cat1 = rule.category || 'arithmetic';
   const cat2 = presetRule.category || 'arithmetic';
@@ -50,6 +45,7 @@ export function matchesPreset(rule: WorksheetRule, presetRule: WorksheetRule): b
     const pr2 = presetRule.proportionRule;
     if (!pr1 || !pr2) return pr1 === pr2;
     if (pr1.type !== pr2.type) return false;
+    if (rule.title && presetRule.title && rule.title !== presetRule.title) return false;
     return true;
   }
 

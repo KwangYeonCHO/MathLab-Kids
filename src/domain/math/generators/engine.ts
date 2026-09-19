@@ -45,38 +45,39 @@ export function generateWorksheet(rule: WorksheetRule): GenerationResult {
   let consecutiveFailures = 0;
   const category = rule.category || 'arithmetic';
 
-  for (let i = 0; i < totalCount; i++) {
-    const op = shuffledOps[i];
+  while (problems.length < totalCount) {
+    const currentIndex = problems.length + 1;
+    const op = shuffledOps[problems.length % shuffledOps.length];
     let created: Problem | null = null;
     let found = false;
 
     // 현재 문제 생성 시도 (최대 50회 시도)
     for (let attempt = 0; attempt < 50; attempt++) {
       if (category === 'fraction') {
-        created = generateFractionProblem(rule, i + 1, false);
+        created = generateFractionProblem(rule, currentIndex, false);
       } else if (category === 'decimal') {
-        created = generateDecimalProblem(rule, i + 1, false);
+        created = generateDecimalProblem(rule, currentIndex, false);
       } else if (category === 'mixed_operation') {
-        created = generateMixedOpProblem(rule, i + 1, false);
+        created = generateMixedOpProblem(rule, currentIndex, false);
       } else if (category === 'proportion') {
-        created = generateProportionProblem(rule, i + 1, false);
+        created = generateProportionProblem(rule, currentIndex, false);
       } else if (category === 'factors_multiples') {
-        created = generateFactorProblem(rule, i + 1, false);
+        created = generateFactorProblem(rule, currentIndex, false);
       } else if (rule.operandCount === 3 && isThreeOperandsSupported(rule)) {
-        created = generateThreeOperandProblem(rule, i + 1, false);
+        created = generateThreeOperandProblem(rule, currentIndex, false);
       } else {
         switch (op) {
           case 'addition':
-            created = generateAdditionProblem(rule, i + 1, false);
+            created = generateAdditionProblem(rule, currentIndex, false);
             break;
           case 'subtraction':
-            created = generateSubtractionProblem(rule, i + 1, false);
+            created = generateSubtractionProblem(rule, currentIndex, false);
             break;
           case 'multiplication':
-            created = generateMultiplicationProblem(rule, i + 1, false);
+            created = generateMultiplicationProblem(rule, currentIndex, false);
             break;
           case 'division':
-            created = generateDivisionProblem(rule, i + 1, false);
+            created = generateDivisionProblem(rule, currentIndex, false);
             break;
         }
       }
@@ -99,15 +100,21 @@ export function generateWorksheet(rule: WorksheetRule): GenerationResult {
 
     if (found && created) {
       consecutiveFailures = 0;
+      created.index = problems.length + 1;
       problems.push(created);
     } else {
       consecutiveFailures++;
-      if (consecutiveFailures > 20) {
+      if (consecutiveFailures > 25) {
         // 중복 없이 생성할 수 있는 가능한 조합이 고갈된 경우
         break;
       }
     }
   }
+
+  // 모든 문제의 번호가 1부터 누락 없이 연속되도록 최종 보장
+  problems.forEach((p, idx) => {
+    p.index = idx + 1;
+  });
 
   if (problems.length < Math.min(5, totalCount)) {
     return {
