@@ -92,8 +92,8 @@ export default function CreatePage() {
         </button>
       </div>
 
-      {/* 2열 레이아웃: 좌측 설정 패널 + 우측 실시간 미리보기 */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      {/* 2열 레이아웃: 좌측 설정 패널 + 우측 실시간 미리보기 (우측 미리보기가 sticky로 스크롤을 추적하도록 items-start 미적용) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <div className={`lg:col-span-7 xl:col-span-8 ${activeTab === 'preview' ? 'hidden lg:block' : 'block'}`}>
           <RuleEditor />
         </div>

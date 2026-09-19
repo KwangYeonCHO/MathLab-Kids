@@ -22,8 +22,8 @@ export function LivePreview({ rule, onRefresh }: LivePreviewProps) {
   }, [rule]);
 
   return (
-    <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm sticky top-20">
-      <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+    <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm sticky top-20 z-20 max-h-[calc(100vh-6rem)] overflow-y-auto overscroll-contain">
+      <div className="flex items-center justify-between pb-3 border-b border-slate-100 sticky top-0 bg-white z-10">
         <div className="flex items-center gap-2">
           <Eye className="w-5 h-5 text-emerald-600" />
           <h3 className="font-bold text-slate-800 text-base">실시간 문제 미리보기</h3>
