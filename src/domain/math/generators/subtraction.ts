@@ -4,15 +4,17 @@
  */
 import { WorksheetRule, Problem } from '../types';
 import { analyzeBorrows } from '../analyzers/borrow';
-import { getRandomInt, pickRandom, getRangeForDigit } from './utils';
+import { getRandomInt, getRangeForDigit, pickOperandDigit } from './utils';
 
 export function generateSubtractionProblem(
   rule: WorksheetRule,
   index: number,
   isExample: boolean = false
 ): Problem | null {
-  const digitA = pickRandom(rule.operandA.digits);
-  const digitB = pickRandom(rule.operandB.digits);
+  const digitA = pickOperandDigit(rule.operandA, rule.allowZero);
+  const digitB = pickOperandDigit(rule.operandB, rule.allowZero);
+
+  if (digitA === undefined || digitB === undefined) return null;
 
   const rangeA = getRangeForDigit(digitA, rule.allowZero);
   const rangeB = getRangeForDigit(digitB, rule.allowZero);
@@ -22,11 +24,13 @@ export function generateSubtractionProblem(
   const minB = Math.max(rangeB.min, rule.operandB.min ?? rangeB.min);
   const maxB = Math.min(rangeB.max, rule.operandB.max ?? rangeB.max);
 
+  const hasRange = [rule.operandA, rule.operandB].some(operand => operand.min !== undefined || operand.max !== undefined);
+
   for (let attempt = 0; attempt < 300; attempt++) {
     let a: number;
     let b: number;
 
-    if (rule.borrowCondition === 'none') {
+    if (!hasRange && rule.borrowCondition === 'none') {
       const generated = generateNoBorrowSubtraction(digitA, digitB, rule.allowZero);
       a = generated.a;
       b = generated.b;

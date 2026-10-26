@@ -1,7 +1,16 @@
 /**
  * 수학 연산 생성기 유틸리티 함수
  */
-import { Operation, UniqueMode, Problem } from '../types';
+import { Operation, UniqueMode, Problem, NumberOperandRule } from '../types';
+
+/** 자릿수와 최솟값·최댓값의 교집합이 있는 자릿수만 선택하며, 유효한 범위가 없으면 undefined를 반환합니다. */
+export function pickOperandDigit(operand: NumberOperandRule, allowZero = false): number | undefined {
+  const validDigits = operand.digits.filter(digit => {
+    const range = getRangeForDigit(digit, allowZero);
+    return Math.max(range.min, operand.min ?? range.min) <= Math.min(range.max, operand.max ?? range.max);
+  });
+  return validDigits.length ? pickRandom(validDigits) : undefined;
+}
 
 export function getRandomInt(min: number, max: number): number {
   const cmin = Math.ceil(min);

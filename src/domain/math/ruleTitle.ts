@@ -5,6 +5,12 @@ import { GRADE_PRESETS } from './presets';
  * 주어진 규칙이 공식 학년별 프리셋 규칙과 일치하는지 엄격하게 판별합니다.
  */
 export function matchesPreset(rule: WorksheetRule, presetRule: WorksheetRule): boolean {
+  // 사용자 지정 피연산자 범위는 기본 프리셋과 구분하여 선택 표시를 유지합니다.
+  const operands = ['operandA', 'operandB', 'operandC'] as const;
+  for (const key of operands) {
+    if (key === 'operandC' && (rule.operandCount ?? 2) !== 3) continue;
+    if (rule[key]?.min !== presetRule[key]?.min || rule[key]?.max !== presetRule[key]?.max) return false;
+  }
   // 2. 카테고리 비교 (fraction, decimal, mixed_operation, proportion, factors_multiples, arithmetic 등)
   const cat1 = rule.category || 'arithmetic';
   const cat2 = presetRule.category || 'arithmetic';

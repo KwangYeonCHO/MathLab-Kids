@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useWorksheetStore } from '@/stores/worksheetStore';
 import { Operation, CarryCondition, BorrowCondition, DivisionRemainderCondition, DisplayFormat, UniqueMode } from '@/domain/math/types';
 import { isThreeOperandsSupported } from '@/domain/math/generators/threeOperandsGenerator';
+import { OperandRangeInputs } from './OperandRangeInputs';
 import { PresetSelector } from './PresetSelector';
 import { CreateActionButtons } from './CreateActionButtons';
 import { Sliders, Settings2, Check, RotateCcw } from 'lucide-react';
@@ -48,6 +49,8 @@ export function RuleEditor() {
       [operandKey]: {
         ...currentTargetRule,
         digits: nextDigits,
+        min: undefined,
+        max: undefined,
       },
     });
   };
@@ -268,6 +271,9 @@ export function RuleEditor() {
                   );
                 })}
               </div>
+              <OperandRangeInputs operand={currentRule.operandA} label="피연산자 A"
+                allowZero={currentRule.allowZero} disabled={Boolean(currentRule.category && currentRule.category !== 'arithmetic')}
+                onChange={operand => setRule({ operandA: operand })} />
             </div>
 
             {/* 두 번째 수 (피연산자 B) 카드 */}
@@ -309,6 +315,9 @@ export function RuleEditor() {
                   );
                 })}
               </div>
+              <OperandRangeInputs operand={currentRule.operandB} label="피연산자 B"
+                allowZero={currentRule.allowZero} disabled={Boolean(currentRule.category && currentRule.category !== 'arithmetic')}
+                onChange={operand => setRule({ operandB: operand })} />
             </div>
 
             {/* 세 번째 수 (피연산자 C) 카드 */}
@@ -351,6 +360,9 @@ export function RuleEditor() {
                     );
                   })}
                 </div>
+                <OperandRangeInputs operand={currentRule.operandC || currentRule.operandB} label="피연산자 C"
+                  allowZero={currentRule.allowZero}
+                  onChange={operand => setRule({ operandC: operand })} />
               </div>
             )}
           </div>

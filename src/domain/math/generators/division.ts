@@ -3,15 +3,17 @@
  * 나머지가 없는 나눗셈 / 나머지가 있는 나눗셈(0 < 나머지 < 나누는 수)을 완벽하게 생성합니다.
  */
 import { WorksheetRule, Problem } from '../types';
-import { getRandomInt, pickRandom, getRangeForDigit } from './utils';
+import { getRandomInt, getRangeForDigit, pickOperandDigit } from './utils';
 
 export function generateDivisionProblem(
   rule: WorksheetRule,
   index: number,
   isExample: boolean = false
 ): Problem | null {
-  const digitA = pickRandom(rule.operandA.digits); // 피제수 (나누어지는 수) 자릿수
-  const digitB = pickRandom(rule.operandB.digits); // 제수 (나누는 수) 자릿수
+  const digitA = pickOperandDigit(rule.operandA, false); // 피제수 (나누어지는 수) 자릿수
+  const digitB = pickOperandDigit(rule.operandB, false); // 제수 (나누는 수) 자릿수
+
+  if (digitA === undefined || digitB === undefined) return null;
 
   const rangeA = getRangeForDigit(digitA, false); // 0으로 나누기 및 0 피제수 방지
   const rangeB = getRangeForDigit(digitB, false);

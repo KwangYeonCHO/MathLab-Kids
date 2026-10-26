@@ -3,7 +3,7 @@
  * 곱셈구구(2~9단), 여러 자리 수 곱셈, 받아올림 제어, 10/100의 배수 등을 지원합니다.
  */
 import { WorksheetRule, Problem } from '../types';
-import { getRandomInt, pickRandom, getRangeForDigit } from './utils';
+import { getRandomInt, pickRandom, getRangeForDigit, pickOperandDigit } from './utils';
 
 export function generateMultiplicationProblem(
   rule: WorksheetRule,
@@ -16,8 +16,10 @@ export function generateMultiplicationProblem(
     let a: number;
     let b: number;
 
-    const digitA = pickRandom(rule.operandA.digits);
-    const digitB = pickRandom(rule.operandB.digits);
+    const digitA = pickOperandDigit(rule.operandA, rule.allowZero);
+    const digitB = pickOperandDigit(rule.operandB, rule.allowZero);
+
+    if (digitA === undefined || digitB === undefined) return null;
 
     // 곱셈구구 (한 자리 수 x 한 자리 수 기본)
     if (digitA === 1 && digitB === 1) {
@@ -44,6 +46,10 @@ export function generateMultiplicationProblem(
       a = getRandomInt(minA, maxA);
       b = getRandomInt(minB, maxB);
     }
+
+    // 곱셈구구 분기에서도 각 위치의 사용자 지정 범위를 반드시 준수합니다.
+    if (a < (rule.operandA.min ?? -Infinity) || a > (rule.operandA.max ?? Infinity) ||
+      b < (rule.operandB.min ?? -Infinity) || b > (rule.operandB.max ?? Infinity)) continue;
 
     // 끝자리 0 검증
     if (rule.operandA.allowZeroEnding === false && a % 10 === 0) continue;

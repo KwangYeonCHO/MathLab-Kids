@@ -4,15 +4,17 @@
  */
 import { WorksheetRule, Problem } from '../types';
 import { countCarries } from '../analyzers/carry';
-import { getRandomInt, pickRandom, getRangeForDigit } from './utils';
+import { getRandomInt, getRangeForDigit, pickOperandDigit } from './utils';
 
 export function generateAdditionProblem(
   rule: WorksheetRule,
   index: number,
   isExample: boolean = false
 ): Problem | null {
-  const digitA = pickRandom(rule.operandA.digits);
-  const digitB = pickRandom(rule.operandB.digits);
+  const digitA = pickOperandDigit(rule.operandA, rule.allowZero);
+  const digitB = pickOperandDigit(rule.operandB, rule.allowZero);
+
+  if (digitA === undefined || digitB === undefined) return null;
 
   const rangeA = getRangeForDigit(digitA, rule.allowZero);
   const rangeB = getRangeForDigit(digitB, rule.allowZero);
@@ -22,17 +24,19 @@ export function generateAdditionProblem(
   const minB = Math.max(rangeB.min, rule.operandB.min ?? rangeB.min);
   const maxB = Math.min(rangeB.max, rule.operandB.max ?? rangeB.max);
 
+  const hasRange = [rule.operandA, rule.operandB].some(operand => operand.min !== undefined || operand.max !== undefined);
+
   // 최대 300번 시도하여 규칙에 맞는 피연산자 추출
   for (let attempt = 0; attempt < 300; attempt++) {
     let a: number;
     let b: number;
 
     // 받아올림 없음(none) 최적화: 자릿수별 조립 우선 시도
-    if (rule.carryCondition === 'none') {
+    if (!hasRange && rule.carryCondition === 'none') {
       const generated = generateNoCarryAddition(digitA, digitB, rule.allowZero);
       a = generated.a;
       b = generated.b;
-    } else if (rule.carryCondition === 'once' && attempt > 30) {
+    } else if (!hasRange && rule.carryCondition === 'once' && attempt > 30) {
       // 30회 시도 후 미발견 시 자릿수 조립 활용
       const generated = generateSingleCarryAddition(digitA, digitB, rule.allowZero);
       a = generated.a;

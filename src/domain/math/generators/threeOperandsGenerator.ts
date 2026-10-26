@@ -10,7 +10,7 @@
  * - 나눗셈 시 각 단계가 자연수로 나누어떨어짐을 전수 보장
  */
 import { WorksheetRule, Problem, Operation } from '../types';
-import { getRandomInt, pickRandom, getRangeForDigit } from './utils';
+import { getRandomInt, pickRandom, getRangeForDigit, pickOperandDigit } from './utils';
 import { countCarries } from '../analyzers/carry';
 
 /**
@@ -56,9 +56,11 @@ export function generateThreeOperandProblem(
     ? rule.operations
     : ['addition' as Operation];
 
-  const digitA = pickRandom(rule.operandA.digits);
-  const digitB = pickRandom(rule.operandB.digits);
-  const digitC = pickRandom(rule.operandC?.digits || rule.operandB.digits);
+  const digitA = pickOperandDigit(rule.operandA, rule.allowZero);
+  const digitB = pickOperandDigit(rule.operandB, rule.allowZero);
+  const digitC = pickOperandDigit(rule.operandC || rule.operandB, rule.allowZero);
+
+  if (digitA === undefined || digitB === undefined || digitC === undefined) return null;
 
   const rangeA = getRangeForDigit(digitA, rule.allowZero);
   const rangeB = getRangeForDigit(digitB, rule.allowZero);
@@ -68,8 +70,8 @@ export function generateThreeOperandProblem(
   const maxA = Math.min(rangeA.max, rule.operandA.max ?? rangeA.max);
   const minB = Math.max(rangeB.min, rule.operandB.min ?? rangeB.min);
   const maxB = Math.min(rangeB.max, rule.operandB.max ?? rangeB.max);
-  const minC = Math.max(rangeC.min, rule.operandC?.min ?? rangeC.min);
-  const maxC = Math.min(rangeC.max, rule.operandC?.max ?? rangeC.max);
+  const minC = Math.max(rangeC.min, (rule.operandC || rule.operandB).min ?? rangeC.min);
+  const maxC = Math.min(rangeC.max, (rule.operandC || rule.operandB).max ?? rangeC.max);
 
   // 최대 300회 시도하여 초등 교육과정에 100% 부합하는 세 수의 연산식 생성
   for (let attempt = 0; attempt < 300; attempt++) {
@@ -224,6 +226,9 @@ export function generateThreeOperandProblem(
     // 기본 검증
     if (a === undefined || b === undefined || c === undefined || answer === undefined) continue;
     if (isNaN(a) || isNaN(b) || isNaN(c) || isNaN(answer)) continue;
+
+    // 역산으로 생성한 피연산자도 위치별 범위에서 벗어나지 않도록 확인합니다.
+    if (a < minA || a > maxA || b < minB || b > maxB || c < minC || c > maxC) continue;
 
     // 음수 방지 (초등 교육과정 철칙)
     if (!rule.allowNegative && answer < 0) continue;
